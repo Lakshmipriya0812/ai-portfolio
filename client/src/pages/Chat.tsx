@@ -2,26 +2,16 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, 
-  Info, 
-  Star, 
-  ChevronDown, 
-  User, 
   Briefcase, 
   Brain, 
   Sparkles,
   MessageCircle, 
-  MoreHorizontal,
   Send,
   Smile,
-  Github,
-  Linkedin,
   X,
-  Loader2,
-  ArrowRight,
-  ArrowDown,
   ArrowUp
 } from 'lucide-react';
-import { generateResponse } from '../services/portfolioData';
+import { apiService } from '../services/apiService';
 
 interface ChatInteraction {
   id: string;
@@ -29,6 +19,7 @@ interface ChatInteraction {
   response: string;
   timestamp: Date;
   isLoading?: boolean;
+  structured?: any;
 }
 
 interface ChatProps {
@@ -38,12 +29,7 @@ interface ChatProps {
 }
 
 const Chat = ({ onBackToHome }: ChatProps) => {
-  const [currentInteraction, setCurrentInteraction] = useState<ChatInteraction | null>({
-    id: '1',
-    question: "Tell me about yourself",
-    response: "Hey 👋 I'm Lakshmipriya, a passionate developer specializing in AI and full-stack development. I'm currently working on exciting projects and love exploring new technologies. I'm passionate about AI, tech, entrepreneurship and building innovative solutions.",
-    timestamp: new Date()
-  });
+  const [currentInteraction, setCurrentInteraction] = useState<ChatInteraction | null>(null);
   const [inputValue, setInputValue] = useState('');
   const [showQuickQuestions, setShowQuickQuestions] = useState(true);
   const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
@@ -77,18 +63,27 @@ const Chat = ({ onBackToHome }: ChatProps) => {
     // Replace the current interaction completely
     setCurrentInteraction(newInteraction);
 
-    // Simulate AI response (replace with actual API call later)
-    setTimeout(() => {
-      const response = generateResponse(question);
-      
+    try {
+      const response = await apiService.sendChatMessage(question);
+      const aiResponse = response.response.content;
+      const structured = response.response.data?.structured;
+
       setCurrentInteraction({
         ...newInteraction,
-        response,
+        response: aiResponse,
+        structured,
         isLoading: false
       });
-      
+    } catch (err: any) {
+      setCurrentInteraction({
+        ...newInteraction,
+        response: err?.message || 'Something went wrong. Please try again.',
+        structured: undefined,
+        isLoading: false
+      });
+    } finally {
       setIsLoading(false);
-    }, 2000);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -175,7 +170,7 @@ const Chat = ({ onBackToHome }: ChatProps) => {
                   transition={{ duration: 0.5 }}
                   className="min-h-[60vh] flex flex-col justify-center items-center"
                 >
-                  {/* Question - Only text, no user symbol */}
+                  {/* Question */}
                   <div className="mb-8 text-center w-full">
                     <div className="mb-4">
                       <p className="text-gray-800 font-medium text-2xl">{currentInteraction.question}</p>
@@ -202,7 +197,9 @@ const Chat = ({ onBackToHome }: ChatProps) => {
                       transition={{ duration: 0.5, delay: 0.2 }}
                     >
                       <div className="max-w-2xl mx-auto">
-                        <p className="text-gray-800 leading-relaxed text-lg">{currentInteraction.response}</p>
+                        {currentInteraction.structured
+                          ? renderStructured(currentInteraction.structured)
+                          : (<p className="text-gray-800 leading-relaxed text-lg">{currentInteraction.response}</p>)}
                       </div>
                     </motion.div>
                   )}
@@ -395,3 +392,85 @@ const Chat = ({ onBackToHome }: ChatProps) => {
 };
 
 export default Chat; 
+
+// Renderer for structured chat responses from the backend
+function renderStructured(structured: any) {
+  const type = structured?.type;
+  switch (type) {
+    case 'project':
+    case 'skills':
+      return (
+        <div className="text-left">
+          <h3 className="text-2xl font-semibold mb-3">🛠 Technical Skills</h3>
+          <div className="flex flex-wrap gap-2">
+            {(structured.skills || []).map((s: string) => (
+              <span key={s} className="px-2 py-1 text-sm rounded-full bg-blue-50 text-blue-700 border border-blue-200">{s}</span>
+            ))}
+          </div>
+        </div>
+      );
+    case 'skill':
+      return (
+        <div className="text-left">
+          <h3 className="text-2xl font-semibold mb-2">🛠 Skill</h3>
+          <span className="px-2 py-1 text-sm rounded-full bg-blue-50 text-blue-700 border border-blue-200">{structured.name}</span>
+        </div>
+      );
+      return (
+        <div className="text-left">
+          <h3 className="text-2xl font-semibold mb-2">🚀 {structured.title}</h3>
+          {structured.description && (
+            <p className="text-gray-700 mb-3">{structured.description}</p>
+          )}
+          {structured.technologies?.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {structured.technologies.map((tech: string) => (
+                <span key={tech} className="px-2 py-1 text-sm rounded-full bg-purple-50 text-purple-700 border border-purple-200">{tech}</span>
+              ))}
+            </div>
+          )}
+          {structured.highlights?.length > 0 && (
+            <ul className="list-disc pl-6 space-y-1 text-gray-800">
+              {structured.highlights.map((h: string, idx: number) => (
+                <li key={idx}>{h}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      );
+    case 'contact':
+      return (
+        <div className="text-left space-y-2">
+          <h3 className="text-2xl font-semibold">📬 Contact</h3>
+          {structured.email && (<p>✉️ <a className="text-blue-600 hover:underline" href={`mailto:${structured.email}`}>{structured.email}</a></p>)}
+          {structured.phone && (<p>📞 <a className="text-blue-600 hover:underline" href={`tel:${structured.phone}`}>{structured.phone}</a></p>)}
+          {structured.linkedin && (<p>🔗 <a className="text-blue-600 hover:underline" href={structured.linkedin} target="_blank" rel="noreferrer">LinkedIn</a></p>)}
+          {structured.github && (<p>🐙 <a className="text-blue-600 hover:underline" href={structured.github} target="_blank" rel="noreferrer">GitHub</a></p>)}
+        </div>
+      );
+    case 'experience':
+      return (
+        <div className="text-left">
+          <h3 className="text-2xl font-semibold mb-1">💼 {structured.role}{structured.company ? ` @ ${structured.company}` : ''}</h3>
+          {structured.period && (<p className="text-gray-600 mb-3">{structured.period}</p>)}
+          {structured.highlights?.length > 0 && (
+            <ul className="list-disc pl-6 space-y-1 text-gray-800">
+              {structured.highlights.map((h: string, idx: number) => (
+                <li key={idx}>{h}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      );
+    case 'education':
+      return (
+        <div className="text-left">
+          <h3 className="text-2xl font-semibold mb-1">🎓 {structured.institution}</h3>
+          <p className="text-gray-700 mb-1">{[structured.degree, structured.field].filter(Boolean).join(', ')}</p>
+          {structured.period && (<p className="text-gray-600">{structured.period}</p>)}
+        </div>
+      );
+    default:
+      return (<p className="text-gray-800 leading-relaxed text-lg">{structured?.text || ''}</p>);
+  }
+}

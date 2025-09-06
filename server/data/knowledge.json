@@ -1,0 +1,90 @@
+{
+    "about": "I am Lakshmipriya RajeshKanna, a software engineer with a Master’s from Drexel University. I specialize in full-stack web development, DevOps, and AI-powered systems. I am experienced in Python, Java, JavaScript, React, Spring Boot, SQL, and cloud platforms like AWS.",
+    
+    "skills": "Python, Java, JavaScript, SQL, C++, C#, React, Next.js, TailwindCSS, Node.js, Express.js, Spring Boot, Flask, REST API, Kafka, Docker, Kubernetes, Terraform, Git, GitHub Actions, GitLab CI/CD, Jenkins, AWS EC2, S3, MySQL, MongoDB, PostgreSQL, Neo4j, JUnit, Mockito, Jest, TDD, XP, Agile",
+    
+    "education": "Master of Science in Software Engineering, Drexel University, Philadelphia, PA (GPA: 3.72); Bachelor of Technology in Information Technology, Sona College of Technology, Salem, India (GPA: 3.8)",
+    
+    "fun": "I love baking, especially cakes and cupcakes. Experimenting with new flavors and decorating treats is one of my favorite hobbies.",    
+      
+    "experience": [
+      {
+        "role": "DevOps Intern",
+        "company": "Epilogue Systems",
+        "period": "Sep 2025 - Present",
+        "location": "Philadelphia, PA",
+        "highlights": [
+          "Containerized applications using Docker",
+          "Automated cloud infrastructure provisioning with Terraform",
+          "Implemented monitoring and logging with Grafana"
+        ]
+      },
+      {
+        "role": "Software Engineer Intern",
+        "company": "Techavidity",
+        "period": "May 2025 - Aug 2025",
+        "location": "Remote",
+        "highlights": [
+          "Built multi-page Streamlit dashboards for Amazon analytics",
+          "Developed Neo4j referral system with BigQuery and GDS algorithms",
+          "Experimented with GraphRAG agent integrating structured and unstructured data with HuggingFace models"
+        ]
+      },
+      {
+        "role": "Full Stack Developer / Web Design Intern",
+        "company": "Intellint Technology LLP",
+        "period": "Apr 2022 - Dec 2022 / Mar 2020 - Jul 2020",
+        "location": "Chennai, India",
+        "highlights": [
+          "Engineered client portal for shipment tracking and invoicing with React, Node.js, PostgreSQL",
+          "Managed AWS deployments with Docker and CI/CD pipelines",
+          "Implemented JWT authentication and IAM control"
+        ]
+      }
+    ],
+    
+    "projects": [
+      {
+        "name": "Sonic Touch – AI Powered E-commerce for Visually Impaired Users",
+        "technologies": "React, Node.js, Tailwind, Rasa, AWS, Docker",
+        "highlights": [
+          "Deployed voice-enabled e-commerce platform, improving accessibility engagement by 85%",
+          "Integrated AI-powered assistant with Rasa for conversational interactions",
+          "Containerized full-stack application for cloud deployment"
+        ]
+      },
+      {
+        "name": "Dungeon Crawler Game Engine",
+        "technologies": "Java, GitLab CI/CD, Design Patterns",
+        "highlights": [
+          "Designed Java-based game with GUI, player movement, enemies, and power-ups",
+          "Applied TDD and XP practices achieving 95%+ unit test coverage",
+          "Automated CI/CD pipelines with GitLab ensuring reliable deployments"
+        ]
+      },
+      {
+        "name": "Face Mask Detection and Verification System",
+        "technologies": "PyTorch, ResNet50, TensorFlow",
+        "highlights": [
+          "Prepared and preprocessed dataset for high-quality training",
+          "Trained ResNet50 for mask detection and performed face verification using cosine similarity"
+        ]
+      },
+      {
+        "name": "Ethereum Token Development",
+        "technologies": "Solidity, MetaMask, ERC-20",
+        "highlights": [
+          "Created custom ERC-20 token reducing gas fees by 40%",
+          "Integrated MetaMask for seamless user transactions with 99% success rate"
+        ]
+      }
+    ],
+    
+    "contact": {
+      "email": "rs.lakshmipriya08@gmail.com",
+      "phone": "267-261-2987",
+      "LinkedIn": "https://www.linkedin.com/in/lakshmipriya08",
+      "GitHub": "https://github.com/lakshmipriya08"
+    }
+  }
+  

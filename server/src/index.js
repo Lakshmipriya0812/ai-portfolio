@@ -1,26 +1,29 @@
+
+
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+dotenv.config({ path: join(__dirname, '../.env') });
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
-import dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+
 
 // Import routes
 import chatRoutes from './routes/chat.js';
-import portfolioRoutes from './routes/portfolio.js';
+import ingestRoutes from './routes/ingest.js';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler.js';
 import { validateRequest } from './middleware/validation.js';
 
-// Load environment variables
-dotenv.config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -85,7 +88,8 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/chat', chatRoutes);
-app.use('/api/portfolio', portfolioRoutes);
+app.use('/api/ingest', ingestRoutes);
+// Portfolio routes removed; chatbot answers strictly from knowledge base
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {

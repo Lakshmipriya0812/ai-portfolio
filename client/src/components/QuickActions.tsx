@@ -7,9 +7,11 @@ interface QuickActionsProps {
 
 const QuickActions = ({ onQuestionClick, theme }: QuickActionsProps) => {
   const questions = [
+    "Tell me about yourself",
     "Tell me about your projects",
     "What are your skills?",
     "What's your experience?",
+    "What do you do for fun?",
     "How can I contact you?"
   ];
 
