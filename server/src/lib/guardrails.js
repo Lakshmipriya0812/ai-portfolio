@@ -35,31 +35,37 @@ function formatDocumentForDisplay(doc) {
 
   switch (type) {
     case 'project': {
-      const name = meta.title || meta.name || title;
+      const name = meta.name || meta.title || title;
       const technologies = Array.isArray(meta.technologies)
         ? meta.technologies.join(', ')
         : (typeof meta.technologies === 'string' ? meta.technologies : '');
       const highlights = Array.isArray(meta.highlights) ? meta.highlights : [];
-      let description = meta.description || content || '';
-      // Suppress raw JSON blobs and duplicate titles as description
-      const isJsonLike = typeof description === 'string' && description.trim().startsWith('{') && description.trim().endsWith('}');
-      if (isJsonLike || description.trim() === name.trim()) {
-        description = '';
+    
+      let description = meta.description;
+      if (!description && typeof content === 'string') {
+        try {
+          const parsed = JSON.parse(content);
+          if (parsed?.description) {
+            description = parsed.description;
+          }
+        } catch (_) {
+        }
       }
+    
       const lines = [];
-
-      // Modern heading with emoji
+    
       lines.push(`🚀 Project: ${name}`);
       if (description) lines.push(description);
-
+    
       if (technologies) lines.push(`💻 Technologies: ${technologies}`);
       if (highlights.length) {
         lines.push('✨ Highlights:');
-        for (const h of highlights) lines.push(`  • ${h}`); // indented bullet
+        for (const h of highlights) lines.push(`  • ${h}`);
       }
-
+    
       return lines.filter(Boolean).join('\n');
     }
+    
 
     case 'skill': {
       const name = meta.name || title;
@@ -88,7 +94,7 @@ function formatDocumentForDisplay(doc) {
       lines.push(`💼 Experience: ${role}${company}${period}`);
       if (highlights.length) {
         lines.push('✨ Highlights:');
-        for (const h of highlights) lines.push(`  • ${h}`); // indented bullet
+        for (const h of highlights) lines.push(`  • ${h}`);
       }
 
       return lines.join('\n');
