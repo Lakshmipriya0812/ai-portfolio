@@ -5,14 +5,17 @@ import Chat from "./pages/Chat";
 
 const AppContent = () => {
   const [currentView, setCurrentView] = useState<'landing' | 'chat'>('landing');
+  const [initialQuery, setInitialQuery] = useState<string>('');
   const { theme, toggleTheme } = useTheme();
 
-  const handleSwitchToChat = () => {
+  const handleSwitchToChat = (query?: string) => {
+    setInitialQuery(query || '');
     setCurrentView('chat');
   };
 
   const handleSwitchToLanding = () => {
     setCurrentView('landing');
+    setInitialQuery('');
   };
 
   return (
@@ -20,7 +23,12 @@ const AppContent = () => {
       {currentView === 'landing' ? (
         <Home onSwitchToChat={handleSwitchToChat} />
       ) : (
-        <Chat onBackToHome={handleSwitchToLanding} theme={theme} onThemeToggle={toggleTheme} />
+        <Chat 
+          onBackToHome={handleSwitchToLanding} 
+          theme={theme} 
+          onThemeToggle={toggleTheme}
+          initialQuery={initialQuery}
+        />
       )}
     </>
   );
