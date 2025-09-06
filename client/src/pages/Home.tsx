@@ -1,12 +1,74 @@
-import { Github, Linkedin, ArrowRight } from "lucide-react";
+import {ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Typewriter } from "react-simple-typewriter";
 import AppleCardsCarousel from "../components/HowToUseCardCarousal";
+import HeaderWidget from "../components/HeaderWidget";
+
+const QUICK_ACTIONS = [
+  { 
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3E9858" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+    ), 
+    label: "Me"
+  },
+  { 
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3E9858" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 12h.01"/>
+        <path d="M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+        <path d="M22 13a18.15 18.15 0 0 1-20 0"/>
+        <rect width="20" height="14" x="2" y="6" rx="2"/>
+      </svg>
+    ), 
+    label: "Projects"
+  },
+  { 
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3E9858" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+        <path d="m12 12-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+      </svg>
+    ), 
+    label: "Skills"
+  },
+  { 
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3E9858" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5"/>
+        <path d="M2 12l10 5 10-5"/>
+      </svg>
+    ),
+    label: "Experience"
+  },
+  { 
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3E9858" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 12l2 2 4-4"/>
+        <path d="M21 12c-1 0-2-1-2-2s1-2 2-2 2 1 2 2-1 2-2 2"/>
+        <path d="M3 12c1 0 2-1 2-2s-1-2-2-2-2 1-2 2 1 2 2 2"/>
+        <path d="M12 3c0 1-1 2-2 2s-2-1-2-2 1-2 2-2 2 1 2 2"/>
+        <path d="M12 21c0-1 1-2 2-2s2 1 2 2-1 2-2 2-2-1-2-2"/>
+      </svg>
+    ), 
+    label: "Fun"
+  },
+  { 
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3E9858" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+    ), 
+    label: "Contact"
+  }
+];
 
 interface HomeProps {
   onSwitchToChat: () => void;
-  isModalOpen?: boolean;
 }
 
 const Home = ({ onSwitchToChat }: HomeProps) => {
@@ -40,73 +102,13 @@ const Home = ({ onSwitchToChat }: HomeProps) => {
     }
   };
 
-  const quickActions = [
-    { 
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3E9858" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-          <circle cx="12" cy="7" r="4"/>
-        </svg>
-      ), 
-      label: "Me", 
-      action: () => onSwitchToChat() 
-    },
-    { 
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3E9858" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 12h.01"/>
-          <path d="M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-          <path d="M22 13a18.15 18.15 0 0 1-20 0"/>
-          <rect width="20" height="14" x="2" y="6" rx="2"/>
-        </svg>
-      ), 
-      label: "Projects", 
-      action: () => onSwitchToChat() 
-    },
-    { 
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3E9858" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
-          <path d="m12 12-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
-        </svg>
-      ), 
-      label: "Skills", 
-      action: () => onSwitchToChat() 
-    },
-          { 
-        icon: (
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3E9858" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-            <path d="M2 17l10 5 10-5"/>
-            <path d="M2 12l10 5 10-5"/>
-          </svg>
-        ),
-        label: "Experience",
-        action: () => onSwitchToChat()
-      },
-    { 
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3E9858" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M9 12l2 2 4-4"/>
-          <path d="M21 12c-1 0-2-1-2-2s1-2 2-2 2 1 2 2-1 2-2 2"/>
-          <path d="M3 12c1 0 2-1 2-2s-1-2-2-2-2 1-2 2 1 2 2 2"/>
-          <path d="M12 3c0 1-1 2-2 2s-2-1-2-2 1-2 2-2 2 1 2 2"/>
-          <path d="M12 21c0-1 1-2 2-2s2 1 2 2-1 2-2 2-2-1-2-2"/>
-        </svg>
-      ), 
-      label: "Fun", 
-      action: () => onSwitchToChat() 
-    },
-    { 
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3E9858" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-        </svg>
-      ), 
-      label: "Contact", 
-      action: () => onSwitchToChat() 
-    }
-  ];
+  const scaleFadeIn = (delay = 0.3) => ({
+    initial: { scale: 0.8, opacity: 0 },
+    animate: { scale: 1, opacity: 1 },
+    transition: { delay, duration: 0.5 },
+  });
+  
+  
 
       
   return (
@@ -131,7 +133,6 @@ const Home = ({ onSwitchToChat }: HomeProps) => {
         </div>
       </div>
 
-      {/* Header - Slides down from top */}
       <AnimatePresence>
         {showHeader && (
           <motion.header
@@ -141,44 +142,24 @@ const Home = ({ onSwitchToChat }: HomeProps) => {
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between p-6"
           >
-            {/* Availability Button */}
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
+            {/* Apple Carousel */}
+            <motion.div {...scaleFadeIn(0.3)}
             >
               <AppleCardsCarousel onModalStateChange={setIsModalOpen} />
             </motion.div>
 
-
-
-            {/* Social Links */}
-            <div className="flex items-center space-x-3">
-            <motion.button
+            {/* Social Header Widget */}
+            <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.5, duration: 0.5 }}
-              className="flex items-center justify-center w-10 h-10 bg-gray-200 text-black-800 rounded-full border border-gray-300 hover:border-gray-600 hover:text-gray-900 transition-colors"
-              onClick={() => window.open('https://github.com/Lakshmipriya0812', '_blank')}
-              aria-label="GitHub"
             >
-              <Github size={20} />
-            </motion.button>
-
-            <motion.button
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.6, duration: 0.5 }}
-              className="flex items-center justify-center w-10 h-10 bg-gray-200 text-black-800 rounded-full border border-gray-300 hover:border-gray-600 hover:text-gray-900 transition-colors"
-              onClick={() => window.open('https://www.linkedin.com/in/lakshmipriya-r/', '_blank')}
-              aria-label="LinkedIn"
-            >
-              <Linkedin size={20} />
-            </motion.button>
-          </div>
+              <HeaderWidget />
+            </motion.div>
           </motion.header>
         )}
       </AnimatePresence>
+
 
       {/* Main Content - Centered with wider layout */}
       <main className="flex items-center justify-center min-h-screen px-8">
@@ -247,7 +228,7 @@ const Home = ({ onSwitchToChat }: HomeProps) => {
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyPress}
                 placeholder="Ask me anything..."
                 className="w-full px-8 py-5 bg-gray-50 border border-gray-200 rounded-full text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent pr-20 transition-all shadow-sm text-lg"
               />
@@ -276,10 +257,10 @@ const Home = ({ onSwitchToChat }: HomeProps) => {
           >
             <div className="px-8 pb-12">
               <div className="flex justify-center space-x-6 max-w-2xl mx-auto">
-                {quickActions.map((action, index) => (
+                {QUICK_ACTIONS.map((action, index) => (
                   <motion.button
                     key={action.label}
-                    onClick={action.action}
+                    onClick={onSwitchToChat}
                     className="flex flex-col items-center space-y-2 px-6 py-4 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 transition-colors shadow-sm"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
