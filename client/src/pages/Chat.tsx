@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { debounce } from 'lodash';
 import { 
   ArrowLeft,
-  ArrowUp,
   Send
 } from 'lucide-react';
 import { apiService } from '../services/apiService';
@@ -32,9 +31,10 @@ interface ChatProps {
   onBackToHome: () => void;
   theme: 'light' | 'dark';
   onThemeToggle: () => void;
+  initialQuery?: string;
 }
 
-const Chat = ({ onBackToHome }: ChatProps) => {
+const Chat = ({ onBackToHome, initialQuery }: ChatProps) => {
   const [currentInteraction, setCurrentInteraction] = useState<ChatInteraction | null>(null);
   const [inputValue, setInputValue] = useState('');
   const [showQuickQuestions] = useState(true);
@@ -137,7 +137,14 @@ const Chat = ({ onBackToHome }: ChatProps) => {
       setIsLoading(false);
     }
   }, [inputValue]);
-  
+
+  // Auto-send initial query when component mounts
+  useEffect(() => {
+    if (initialQuery && initialQuery.trim()) {
+      setInputValue(initialQuery);
+      handleSendMessage(initialQuery);
+    }
+  }, [initialQuery, handleSendMessage]);
 
   const debouncedSend = useRef(
     debounce((msg: string) => {
