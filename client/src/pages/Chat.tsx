@@ -1,17 +1,15 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { debounce } from 'lodash';
 import { 
-  ArrowLeft, 
-  Briefcase, 
-  Brain, 
-  Sparkles,
-  MessageCircle, 
-  Send,
-  Smile,
-  X,
-  ArrowUp
+  ArrowLeft,
+  ArrowUp,
+  Send
 } from 'lucide-react';
 import { apiService } from '../services/apiService';
+import HowToUseModal from '../components/HowToUseCardCarousal';
+import QuickQuestionButtons from '../components/QuickActions';
+import HeaderWidget from '../components/HeaderWidget';
 
 interface ChatInteraction {
   id: string;
@@ -44,30 +42,28 @@ const Chat = ({ onBackToHome }: ChatProps) => {
     scrollToBottom();
   }, [currentInteraction]);
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim()) return;
-
-    const question = inputValue;
+  const handleSendMessage = useCallback(async (message?: string) => {
+    const question = message ?? inputValue;
+    if (!question.trim()) return;
+  
     setInputValue('');
     setIsLoading(true);
-
-    // Create new chat interaction with loading state
+  
     const newInteraction: ChatInteraction = {
       id: Date.now().toString(),
-      question: question,
+      question,
       response: '',
       timestamp: new Date(),
       isLoading: true
     };
-
-    // Replace the current interaction completely
+  
     setCurrentInteraction(newInteraction);
-
+  
     try {
       const response = await apiService.sendChatMessage(question);
       const aiResponse = response.response.content;
       const structured = response.response.data?.structured;
-
+  
       setCurrentInteraction({
         ...newInteraction,
         response: aiResponse,
@@ -84,32 +80,28 @@ const Chat = ({ onBackToHome }: ChatProps) => {
     } finally {
       setIsLoading(false);
     }
+  }, [inputValue]);
+  
+
+  const debouncedSend = useRef(
+    debounce((msg: string) => {
+      handleSendMessage(msg);
+    }, 300)
+  ).current;
+  
+  const handleQuickQuestion = (question: string) => {
+    setInputValue(question);
+    debouncedSend(question);
   };
+  
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      handleSendMessage(); 
     }
   };
-
-  const handleQuickQuestion = (question: string) => {
-    setInputValue(question);
-    // Auto-send the question
-    setTimeout(() => {
-      handleSendMessage();
-    }, 100);
-  };
-
-  const quickActions = [
-    { icon: Smile, label: "Me", action: () => handleQuickQuestion("Tell me about yourself") },
-    { icon: Briefcase, label: "Projects", action: () => handleQuickQuestion("What projects have you worked on?") },
-    { icon: Brain, label: "Skills", action: () => handleQuickQuestion("What are your technical skills?") },
-    { icon: Briefcase, label: "Experience", action: () => handleQuickQuestion("What's your work experience?") },
-    { icon: Sparkles, label: "Fun", action: () => handleQuickQuestion("What do you do for fun?") },
-    { icon: MessageCircle, label: "Contact", action: () => handleQuickQuestion("How can I contact you?") }    
-  ];
-
+  
   return (
     <div className="min-h-screen p-[8px] rounded-xl bg-gradient-to-br from-purple-300 via-pink-300 to-red-300">
       <div className="bg-white backdrop-blur-sm min-h-full rounded-xl relative z-10">
@@ -129,32 +121,33 @@ const Chat = ({ onBackToHome }: ChatProps) => {
         </div>
 
         {/* Header - Simplified with just LP logo */}
-        <header className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between p-6">
-          {/* Back Button */}
-          <motion.button
-            onClick={onBackToHome}
-            className="flex items-center justify-center w-10 h-10 bg-gray-200 text-black-800 rounded-full border border-gray-300 hover:border-gray-600 hover:text-gray-900 transition-colors"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <ArrowLeft size={20} />
-          </motion.button>
+        <header className="absolute top-0 left-0 right-0 z-30">
+          <div className="flex items-center justify-between px-6 py-4 relative">
+            
+            {/* Back Button */}
+            <motion.button
+              onClick={onBackToHome}
+              className="flex items-center justify-center w-10 h-10 bg-gray-200 text-black-800 rounded-full border border-gray-300 hover:border-gray-600 hover:text-gray-900 transition-colors"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <ArrowLeft size={20} />
+            </motion.button>
 
-          {/* LP Logo - Centered */}
-          <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center">
-            <div className="w-12 h-12 bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 rounded-full flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-lg">LP</span>
+            {/* LP Logo - Centered Absolutely within Relative Container */}
+            <div className="absolute left-1/2 transform -translate-x-1/2">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 rounded-full flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-lg">LP</span>
+              </div>
+            </div>
+
+            {/* Right Side */}
+            <div className="flex items-center gap-4">
+              <HeaderWidget />
             </div>
           </div>
-
-          {/* How it works button */}
-          <motion.button
-            onClick={() => setIsHowItWorksOpen(true)}
-            className="px-6 py-3 rounded-full bg-gray-200 text-black border border-gray-300 text-sm font-semibold shadow-lg hover:scale-105 transition-all duration-200"
-          >
-            How this works?
-          </motion.button>
         </header>
+
 
         {/* Main Content */}
         <main className="pt-24 px-8 pb-8">
@@ -210,56 +203,20 @@ const Chat = ({ onBackToHome }: ChatProps) => {
             {/* Chat Input Section - Fixed at bottom */}
             <div className="mt-8">
               {/* Collapsible Quick Questions - Moved to middle with left arrow */}
-              <motion.div 
-                className="mb-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-              >
-                <div className="flex items-center justify-center mb-4">
-                  <motion.button 
-                    onClick={() => setShowQuickQuestions(!showQuickQuestions)}
-                    className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    
-                    <span className="text-xs text-gray-600 font-medium ml-1">My quick questions</span>
-                    <ArrowUp 
-                      className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${
-                        showQuickQuestions ? 'rotate-180' : ''
-                      }`} 
-                    />
-                  </motion.button>
-                </div>
-                
                 <AnimatePresence>
                   {showQuickQuestions && (
                     <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
+                      key="quick-questions"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.3 }}
-                      className="overflow-hidden"
                     >
-                      <div className="flex flex-wrap gap-3 justify-center pb-4">
-                        {quickActions.map((action) => (
-                          <motion.button
-                            key={action.label}
-                            onClick={action.action}
-                            className="flex items-center space-x-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-full text-sm transition-colors border border-gray-200"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <action.icon className="w-4 h-4" />
-                            <span>{action.label}</span>
-                          </motion.button>
-                        ))}
-                      </div>
+                      <QuickQuestionButtons onQuestionClick={handleQuickQuestion} />
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </motion.div>
+
 
               {/* Chat Input */}
               <motion.div 
@@ -268,19 +225,18 @@ const Chat = ({ onBackToHome }: ChatProps) => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.6 }}
               >
-                <input
-                  type="text"
+                <textarea
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Ask me anything..."
-                  className="flex-1 bg-transparent outline-none text-gray-800 placeholder-gray-500 text-sm"
-                  disabled={isLoading}
+                  onKeyDown={handleKeyPress}
+                  rows={1}
+                  className="resize-none w-full bg-transparent outline-none text-gray-800 placeholder-gray-500 text-sm"
                 />
+
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={handleSendMessage}
+                  onClick={() => handleSendMessage()}
                   disabled={!inputValue.trim() || isLoading}
                   className={`p-2 rounded-full transition-colors ${
                     inputValue.trim() && !isLoading
@@ -297,72 +253,9 @@ const Chat = ({ onBackToHome }: ChatProps) => {
 
         {/* How it works Modal */}
         <AnimatePresence>
-          {isHowItWorksOpen && (
-            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-              {/* Backdrop */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm z-[9998]"
-              />
+        {isHowItWorksOpen && (
+        <HowToUseModal onModalStateChange={(isOpen: boolean) => setIsHowItWorksOpen(isOpen)} />)}
 
-              {/* Modal */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.97, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.97, y: 20 }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
-                className="relative bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[95vh] overflow-y-auto z-[10000] p-10"
-              >
-                {/* Close Button */}
-                <button
-                  onClick={() => setIsHowItWorksOpen(false)}
-                  className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full bg-gray-900 hover:bg-gray-800 transition-colors"
-                  aria-label="Close"
-                >
-                  <X className="h-5 w-5 text-white" />
-                </button>
-
-                {/* Modal Content */}
-                <div className="p-8">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">Welcome to AI Portfolio</h2>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                    {/* Hover Effect Box */}
-                    <div className="group relative bg-gray-100 p-8 rounded-lg overflow-hidden shadow-md cursor-pointer">
-                      <div className="absolute inset-0 bg-gradient-to-r from-purple-300 to-pink-300 opacity-0 group-hover:opacity-30 transition duration-300" />
-                      <h3 className="text-2xl font-extrabold text-gray-800 mb-6 relative z-10">How to Use</h3>
-                      <p className="text-gray-700 text-base leading-relaxed relative z-10">
-                        Enter your questions directly into the chat interface. Utilize quick-action buttons for faster navigation. Explore details about my background, technical skills, or personal interests.
-                      </p>
-                    </div>
-
-                    {/* Why I created this Box */}
-                    <div className="group relative bg-gray-100 p-8 rounded-lg overflow-hidden shadow-md cursor-pointer">
-                      <div className="absolute inset-0 bg-gradient-to-r from-green-300 to-blue-300 opacity-0 group-hover:opacity-30 transition duration-300" />
-                      <h3 className="text-2xl font-extrabold text-gray-800 mb-4 z-10 relative">Why I created this</h3>
-                      <p className="text-gray-700 z-10 relative text-base leading-relaxed">
-                        Most portfolios are static and impersonal. This one is interactive — it adapts to your questions and lets you explore in real time.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Footer */}
-                  <div className="flex justify-center mt-8">
-                    <motion.button
-                      onClick={() => setIsHowItWorksOpen(false)}
-                      className="px-6 py-3 rounded-full bg-gray-200 text-black border border-gray-300 text-sm font-semibold shadow-lg hover:scale-105 transition-all duration-200"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      Start Chatting
-                    </motion.button>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          )}
         </AnimatePresence>
 
         {/* CSS Loader Styles */}
@@ -414,28 +307,6 @@ function renderStructured(structured: any) {
         <div className="text-left">
           <h3 className="text-2xl font-semibold mb-2">🛠 Skill</h3>
           <span className="px-2 py-1 text-sm rounded-full bg-blue-50 text-blue-700 border border-blue-200">{structured.name}</span>
-        </div>
-      );
-      return (
-        <div className="text-left">
-          <h3 className="text-2xl font-semibold mb-2">🚀 {structured.title}</h3>
-          {structured.description && (
-            <p className="text-gray-700 mb-3">{structured.description}</p>
-          )}
-          {structured.technologies?.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
-              {structured.technologies.map((tech: string) => (
-                <span key={tech} className="px-2 py-1 text-sm rounded-full bg-purple-50 text-purple-700 border border-purple-200">{tech}</span>
-              ))}
-            </div>
-          )}
-          {structured.highlights?.length > 0 && (
-            <ul className="list-disc pl-6 space-y-1 text-gray-800">
-              {structured.highlights.map((h: string, idx: number) => (
-                <li key={idx}>{h}</li>
-              ))}
-            </ul>
-          )}
         </div>
       );
     case 'contact':
