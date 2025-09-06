@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+
 import { motion, AnimatePresence } from 'framer-motion';
 import { debounce } from 'lodash';
 import { 
   ArrowLeft,
+  ArrowUp,
   Send
 } from 'lucide-react';
 import { apiService } from '../services/apiService';
