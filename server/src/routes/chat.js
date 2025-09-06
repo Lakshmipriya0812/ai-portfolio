@@ -12,10 +12,197 @@ const router = express.Router();
 // In-memory conversation storage (in production, use a database)
 const conversations = new Map();
 
+// In-memory stores for rate limiting and deduplication
+const activeRequests = new Map(); // Track active embedding requests
+const sessionUsage = new Map(); // Track per-session usage
+const requestCache = new Map(); // Cache for repeated questions
+
+// Session limits configuration
+const SESSION_LIMITS = {
+  maxRequestsPerHour: parseInt(process.env.SESSION_MAX_REQUESTS_PER_HOUR) || 10,
+  maxRequestsPerDay: parseInt(process.env.SESSION_MAX_REQUESTS_PER_DAY) || 50,
+  cacheExpiryMs: parseInt(process.env.REQUEST_CACHE_EXPIRY_MS) || 5 * 60 * 1000, // 5 minutes
+  staticCacheExpiryMs: parseInt(process.env.STATIC_CACHE_EXPIRY_MS) || 60 * 60 * 1000, // 1 hour for static content
+  requestTimeoutMs: parseInt(process.env.EMBEDDING_REQUEST_TIMEOUT_MS) || 30000 // 30 seconds
+};
+
+// Static content patterns that should be cached longer
+const STATIC_CONTENT_PATTERNS = [
+  /contact/i,
+  /email/i,
+  /phone/i,
+  /address/i,
+  /location/i,
+  /fun/i,
+  /hobby/i,
+  /hobbies/i,
+  /interest/i,
+  /interests/i,
+  /skill/i,
+  /skills/i,
+  /technology/i,
+  /technologies/i,
+  /programming/i,
+  /languages/i,
+  /about/i,
+  /who are you/i,
+  /introduction/i
+];
+
+// Helper functions for rate limiting and caching
+function getSessionId(req) {
+  return req.ip + '_' + (req.headers['user-agent'] || 'unknown');
+}
+
+function checkSessionLimits(sessionId) {
+  const now = Date.now();
+  const hourAgo = now - (60 * 60 * 1000);
+  const dayAgo = now - (24 * 60 * 60 * 1000);
+  
+  if (!sessionUsage.has(sessionId)) {
+    sessionUsage.set(sessionId, { requests: [], lastReset: now });
+  }
+  
+  const usage = sessionUsage.get(sessionId);
+  
+  // Clean old requests
+  usage.requests = usage.requests.filter(timestamp => timestamp > dayAgo);
+  
+  const hourlyRequests = usage.requests.filter(timestamp => timestamp > hourAgo);
+  const dailyRequests = usage.requests.length;
+  
+  if (hourlyRequests.length >= SESSION_LIMITS.maxRequestsPerHour) {
+    return { allowed: false, reason: 'hourly_limit', resetTime: Math.min(...hourlyRequests) + (60 * 60 * 1000) };
+  }
+  
+  if (dailyRequests >= SESSION_LIMITS.maxRequestsPerDay) {
+    return { allowed: false, reason: 'daily_limit', resetTime: Math.min(...usage.requests) + (24 * 60 * 60 * 1000) };
+  }
+  
+  return { allowed: true };
+}
+
+function recordSessionUsage(sessionId) {
+  const now = Date.now();
+  if (!sessionUsage.has(sessionId)) {
+    sessionUsage.set(sessionId, { requests: [], lastReset: now });
+  }
+  sessionUsage.get(sessionId).requests.push(now);
+}
+
+function isStaticContent(question) {
+  return STATIC_CONTENT_PATTERNS.some(pattern => pattern.test(question));
+}
+
+function getCachedResponse(question) {
+  const questionKey = question.toLowerCase().trim();
+  const cached = requestCache.get(questionKey);
+  
+  if (cached) {
+    const isStatic = isStaticContent(question);
+    const cacheExpiry = isStatic ? SESSION_LIMITS.staticCacheExpiryMs : SESSION_LIMITS.cacheExpiryMs;
+    
+    if (Date.now() - cached.timestamp < cacheExpiry) {
+      console.log(`Returning ${isStatic ? 'static' : 'regular'} cached response for:`, question);
+      return cached.data;
+    } else {
+      // Remove expired cache entry
+      requestCache.delete(questionKey);
+    }
+  }
+  return null;
+}
+
+function cacheResponse(question, data) {
+  const questionKey = question.toLowerCase().trim();
+  const isStatic = isStaticContent(question);
+  const cacheExpiry = isStatic ? SESSION_LIMITS.staticCacheExpiryMs : SESSION_LIMITS.cacheExpiryMs;
+  
+  requestCache.set(questionKey, {
+    data,
+    timestamp: Date.now(),
+    isStatic,
+    expiresAt: Date.now() + cacheExpiry
+  });
+  
+  console.log(`Cached ${isStatic ? 'static' : 'regular'} response for:`, question, `(expires in ${Math.round(cacheExpiry / 1000 / 60)} minutes)`);
+}
+
+// Cleanup function to remove stale active requests
+function cleanupStaleRequests() {
+  const now = Date.now();
+  for (const [key, timestamp] of activeRequests.entries()) {
+    if (now - timestamp > SESSION_LIMITS.requestTimeoutMs) {
+      activeRequests.delete(key);
+      console.log('Cleaned up stale request:', key);
+    }
+  }
+}
+
+// Cleanup function to remove expired cache entries
+function cleanupExpiredCache() {
+  const now = Date.now();
+  let cleanedCount = 0;
+  
+  for (const [key, cached] of requestCache.entries()) {
+    if (cached.expiresAt && now > cached.expiresAt) {
+      requestCache.delete(key);
+      cleanedCount++;
+    }
+  }
+  
+  if (cleanedCount > 0) {
+    console.log(`Cleaned up ${cleanedCount} expired cache entries`);
+  }
+}
+
+// Run cleanup every 5 minutes
+setInterval(cleanupStaleRequests, 5 * 60 * 1000);
+// Run cache cleanup every 10 minutes
+setInterval(cleanupExpiredCache, 10 * 60 * 1000);
+
 // POST /api/chat - Send a message and get AI response
 router.post('/', validateChatRequest, async (req, res) => {
   try {
     const { message, conversationId } = req.body;
+    const sessionId = getSessionId(req);
+    
+    // Check session limits
+    const limitCheck = checkSessionLimits(sessionId);
+    if (!limitCheck.allowed) {
+      const resetTime = new Date(limitCheck.resetTime).toISOString();
+      return res.status(429).json({
+        error: 'Rate limit exceeded',
+        message: `Too many requests. ${limitCheck.reason === 'hourly_limit' ? 'Hourly' : 'Daily'} limit reached.`,
+        resetTime,
+        limitType: limitCheck.reason,
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    // Check cache first
+    const cachedResponse = getCachedResponse(message);
+    if (cachedResponse) {
+      console.log('Returning cached response for:', message);
+      return res.json(cachedResponse);
+    }
+    
+    // Check for active request deduplication
+    const requestKey = message.toLowerCase().trim();
+    if (activeRequests.has(requestKey)) {
+      console.log('Request already in progress for:', message);
+      return res.status(409).json({
+        error: 'Request in progress',
+        message: 'A similar request is already being processed. Please wait.',
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    // Mark request as active
+    activeRequests.set(requestKey, Date.now());
+    
+    // Record session usage
+    recordSessionUsage(sessionId);
     
     if (!message || typeof message !== 'string') {
       return res.status(400).json({
@@ -69,7 +256,32 @@ router.post('/', validateChatRequest, async (req, res) => {
 
     const model = process.env.EMBEDDINGS_MODEL || 'sentence-transformers/all-MiniLM-L6-v2';
     const topK = parseInt(process.env.RETRIEVAL_TOP_K) || 3;
-    const results = await retrieveRelevant(message, index, topK, { model });
+    
+    let results;
+    try {
+      results = await retrieveRelevant(message, index, topK, { model });
+    } catch (embeddingError) {
+      console.error('Embedding service error:', embeddingError.message);
+      // Fallback: return a generic response when embeddings fail
+      return res.json({
+        success: true,
+        conversationId: conversation.id,
+        response: {
+          id: responseId,
+          content: "I'm currently experiencing technical difficulties with my knowledge base. Please try again in a few minutes, or contact me directly for assistance.",
+          type: 'text',
+          data: null,
+          timestamp,
+          aiGenerated: false
+        },
+        conversation: {
+          id: conversation.id,
+          messageCount: conversation.messages.length,
+          createdAt: conversation.createdAt,
+          updatedAt: conversation.updatedAt
+        }
+      });
+    }
     const guard = enforceGuardrails(results, { minScore: parseFloat(process.env.SCORE_THRESHOLD) || 0.35 });
     if (guard.allowed) {
       const composed = composeAnswer(results);
@@ -102,8 +314,8 @@ router.post('/', validateChatRequest, async (req, res) => {
       data
     });
 
-    // Return the response
-    res.json({
+    // Cache the response
+    const responseData = {
       success: true,
       conversationId: conversation.id,
       response: {
@@ -120,10 +332,26 @@ router.post('/', validateChatRequest, async (req, res) => {
         createdAt: conversation.createdAt,
         updatedAt: conversation.updatedAt
       }
-    });
+    };
+    
+    // Cache the response for future identical requests
+    cacheResponse(message, responseData);
+    
+    // Clean up active request
+    activeRequests.delete(requestKey);
+    
+    // Return the response
+    res.json(responseData);
 
   } catch (error) {
     console.error('Error in chat endpoint:', error);
+    
+    // Clean up active request on error
+    const requestKey = req.body?.message?.toLowerCase().trim();
+    if (requestKey) {
+      activeRequests.delete(requestKey);
+    }
+    
     res.status(500).json({
       error: 'Internal server error',
       message: 'Failed to process chat message',
@@ -222,5 +450,36 @@ router.delete('/conversation/:id', async (req, res) => {
 });
 
 // Streaming endpoints removed to keep responses deterministic and KB-bound
+
+// GET /api/chat/cache-status - Get cache statistics (for monitoring)
+router.get('/cache-status', (req, res) => {
+  const now = Date.now();
+  let staticCount = 0;
+  let regularCount = 0;
+  let expiredCount = 0;
+  
+  for (const [key, cached] of requestCache.entries()) {
+    if (cached.expiresAt && now > cached.expiresAt) {
+      expiredCount++;
+    } else if (cached.isStatic) {
+      staticCount++;
+    } else {
+      regularCount++;
+    }
+  }
+  
+  res.json({
+    cache: {
+      totalEntries: requestCache.size,
+      staticEntries: staticCount,
+      regularEntries: regularCount,
+      expiredEntries: expiredCount
+    },
+    activeRequests: activeRequests.size,
+    sessionUsage: sessionUsage.size,
+    limits: SESSION_LIMITS,
+    timestamp: new Date().toISOString()
+  });
+});
 
 export default router;

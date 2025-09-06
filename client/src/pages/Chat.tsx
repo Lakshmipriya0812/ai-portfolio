@@ -1,15 +1,21 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { debounce } from 'lodash';
 import { 
   ArrowLeft,
-  ArrowUp,
   Send
 } from 'lucide-react';
 import { apiService } from '../services/apiService';
 import HowToUseModal from '../components/HowToUseCardCarousal';
 import QuickQuestionButtons from '../components/QuickActions';
 import HeaderWidget from '../components/HeaderWidget';
+import MeSection from '../components/sections/MeSection';
+import ProjectsSection from '../components/sections/ProjectsSection';
+import ExperienceSection from '../components/sections/ExperienceSection';
+import SkillsSection from '../components/sections/SkillsSection';
+import FunSection from '../components/sections/FunSection';
+import ContactSection from '../components/sections/ContactSection';
+import EducationSection from '../components/sections/EducationSection';
 
 interface ChatInteraction {
   id: string;
@@ -29,10 +35,58 @@ interface ChatProps {
 const Chat = ({ onBackToHome }: ChatProps) => {
   const [currentInteraction, setCurrentInteraction] = useState<ChatInteraction | null>(null);
   const [inputValue, setInputValue] = useState('');
-  const [showQuickQuestions, setShowQuickQuestions] = useState(true);
+  const [showQuickQuestions] = useState(true);
   const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Memoize the rendered content to prevent infinite re-renders
+  const renderedContent = useMemo(() => {
+    if (!currentInteraction) return null;
+    
+    if (currentInteraction.isLoading) {
+      return (
+        <motion.div 
+          className="text-center mb-8 w-full"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="flex justify-center mb-4">
+            <div className="loader"></div>
+          </div>
+        </motion.div>
+      );
+    }
+
+    if (currentInteraction.structured) {
+      return (
+        <motion.div 
+          className="text-center mb-8 w-full"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <div className="max-w-2xl mx-auto">
+            {renderStructured(currentInteraction.structured)}
+          </div>
+        </motion.div>
+      );
+    }
+
+    return (
+      <motion.div 
+        className="text-center mb-8 w-full"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <div className="max-w-2xl mx-auto">
+          <p className="text-gray-800 leading-relaxed text-lg">{currentInteraction.response}</p>
+        </div>
+      </motion.div>
+    );
+  }, [currentInteraction]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -171,31 +225,7 @@ const Chat = ({ onBackToHome }: ChatProps) => {
                   </div>
 
                   {/* Response or Loading */}
-                  {currentInteraction.isLoading ? (
-                    <motion.div 
-                      className="text-center mb-8 w-full"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <div className="flex justify-center mb-4">
-                        <div className="loader"></div>
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <motion.div 
-                      className="text-center mb-8 w-full"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.2 }}
-                    >
-                      <div className="max-w-2xl mx-auto">
-                        {currentInteraction.structured
-                          ? renderStructured(currentInteraction.structured)
-                          : (<p className="text-gray-800 leading-relaxed text-lg">{currentInteraction.response}</p>)}
-                      </div>
-                    </motion.div>
-                  )}
+                  {renderedContent}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -289,59 +319,33 @@ export default Chat;
 // Renderer for structured chat responses from the backend
 function renderStructured(structured: any) {
   const type = structured?.type;
+  
+  // Normalize the structured data for components
+  const normalizedData = {
+    ...structured,
+    name: structured?.name || structured?.title,
+    summary: structured?.summary || structured?.text
+  };
+  
   switch (type) {
+    case 'me':
+    case 'about':
+      return (<MeSection structured={normalizedData} />);
+    case 'projects':
     case 'project':
-    case 'skills':
-      return (
-        <div className="text-left">
-          <h3 className="text-2xl font-semibold mb-3">🛠 Technical Skills</h3>
-          <div className="flex flex-wrap gap-2">
-            {(structured.skills || []).map((s: string) => (
-              <span key={s} className="px-2 py-1 text-sm rounded-full bg-blue-50 text-blue-700 border border-blue-200">{s}</span>
-            ))}
-          </div>
-        </div>
-      );
-    case 'skill':
-      return (
-        <div className="text-left">
-          <h3 className="text-2xl font-semibold mb-2">🛠 Skill</h3>
-          <span className="px-2 py-1 text-sm rounded-full bg-blue-50 text-blue-700 border border-blue-200">{structured.name}</span>
-        </div>
-      );
-    case 'contact':
-      return (
-        <div className="text-left space-y-2">
-          <h3 className="text-2xl font-semibold">📬 Contact</h3>
-          {structured.email && (<p>✉️ <a className="text-blue-600 hover:underline" href={`mailto:${structured.email}`}>{structured.email}</a></p>)}
-          {structured.phone && (<p>📞 <a className="text-blue-600 hover:underline" href={`tel:${structured.phone}`}>{structured.phone}</a></p>)}
-          {structured.linkedin && (<p>🔗 <a className="text-blue-600 hover:underline" href={structured.linkedin} target="_blank" rel="noreferrer">LinkedIn</a></p>)}
-          {structured.github && (<p>🐙 <a className="text-blue-600 hover:underline" href={structured.github} target="_blank" rel="noreferrer">GitHub</a></p>)}
-        </div>
-      );
+      return (<ProjectsSection structured={normalizedData} />);
     case 'experience':
-      return (
-        <div className="text-left">
-          <h3 className="text-2xl font-semibold mb-1">💼 {structured.role}{structured.company ? ` @ ${structured.company}` : ''}</h3>
-          {structured.period && (<p className="text-gray-600 mb-3">{structured.period}</p>)}
-          {structured.highlights?.length > 0 && (
-            <ul className="list-disc pl-6 space-y-1 text-gray-800">
-              {structured.highlights.map((h: string, idx: number) => (
-                <li key={idx}>{h}</li>
-              ))}
-            </ul>
-          )}
-        </div>
-      );
+      return (<ExperienceSection structured={normalizedData} />);
+    case 'skills':
+    case 'skill':
+      return (<SkillsSection structured={normalizedData} />);
+    case 'fun':
+      return (<FunSection structured={normalizedData} />);
+    case 'contact':
+      return (<ContactSection structured={normalizedData} />);
     case 'education':
-      return (
-        <div className="text-left">
-          <h3 className="text-2xl font-semibold mb-1">🎓 {structured.institution}</h3>
-          <p className="text-gray-700 mb-1">{[structured.degree, structured.field].filter(Boolean).join(', ')}</p>
-          {structured.period && (<p className="text-gray-600">{structured.period}</p>)}
-        </div>
-      );
+      return (<EducationSection structured={normalizedData} />);
     default:
-      return (<p className="text-gray-800 leading-relaxed text-lg">{structured?.text || ''}</p>);
+      return (<p className="text-gray-800 leading-relaxed text-lg">{normalizedData?.text || ''}</p>);
   }
 }
