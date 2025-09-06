@@ -13,7 +13,8 @@ const QUICK_ACTIONS = [
         <circle cx="12" cy="7" r="4"/>
       </svg>
     ), 
-    label: "Me"
+    label: "Me",
+    question: "Who are you and what's your background?"
   },
   { 
     icon: (
@@ -24,7 +25,8 @@ const QUICK_ACTIONS = [
         <rect width="20" height="14" x="2" y="6" rx="2"/>
       </svg>
     ), 
-    label: "Projects"
+    label: "Projects",
+    question: "What projects have you worked on recently?"
   },
   { 
     icon: (
@@ -33,7 +35,8 @@ const QUICK_ACTIONS = [
         <path d="m12 12-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
       </svg>
     ), 
-    label: "Skills"
+    label: "Skills",
+    question: "What are your technical skills and expertise?"
   },
   { 
     icon: (
@@ -43,7 +46,8 @@ const QUICK_ACTIONS = [
         <path d="M2 12l10 5 10-5"/>
       </svg>
     ),
-    label: "Experience"
+    label: "Experience",
+    question: "What's your work experience and career journey?"
   },
   { 
     icon: (
@@ -55,7 +59,8 @@ const QUICK_ACTIONS = [
         <path d="M12 21c0-1 1-2 2-2s2 1 2 2-1 2-2 2-2-1-2-2"/>
       </svg>
     ), 
-    label: "Fun"
+    label: "Fun",
+    question: "What do you do for fun and hobbies?"
   },
   { 
     icon: (
@@ -63,12 +68,13 @@ const QUICK_ACTIONS = [
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
       </svg>
     ), 
-    label: "Contact"
+    label: "Contact",
+    question: "How can I get in touch with you?"
   }
 ];
 
 interface HomeProps {
-  onSwitchToChat: () => void;
+  onSwitchToChat: (query?: string) => void;
 }
 
 const Home = ({ onSwitchToChat }: HomeProps) => {
@@ -78,9 +84,7 @@ const Home = ({ onSwitchToChat }: HomeProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    // Show header after 1 second
     const headerTimer = setTimeout(() => setShowHeader(true), 1000);
-    // Show bottom nav after 1.5 seconds
     const navTimer = setTimeout(() => setShowBottomNav(true), 1500);
     
     return () => {
@@ -91,7 +95,7 @@ const Home = ({ onSwitchToChat }: HomeProps) => {
 
   const handleSendMessage = () => {
     if (inputValue.trim()) {
-      onSwitchToChat();
+      onSwitchToChat(inputValue.trim());
     }
   };
 
@@ -260,7 +264,7 @@ const Home = ({ onSwitchToChat }: HomeProps) => {
                 {QUICK_ACTIONS.map((action, index) => (
                   <motion.button
                     key={action.label}
-                    onClick={onSwitchToChat}
+                    onClick={() => onSwitchToChat(action.question)}
                     className="flex flex-col items-center space-y-2 px-6 py-4 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 transition-colors shadow-sm"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
