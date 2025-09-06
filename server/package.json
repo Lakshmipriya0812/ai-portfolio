@@ -1,13 +1,12 @@
 {
   "name": "ai-portfolio-backend",
   "version": "1.0.0",
-  "description": "Backend for AI-powered portfolio with Mistral LLM integration",
+  "description": "Node.js Express backend for AI-powered portfolio (KB + embeddings + optional rephrase)",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
-    "test": "jest"
+    "dev": "nodemon src/index.js"
   },
   "dependencies": {
     "axios": "^1.6.0",
@@ -19,19 +18,16 @@
     "helmet": "^7.1.0",
     "joi": "^17.11.0",
     "morgan": "^1.10.0",
-    "node-fetch": "^3.3.2",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "jest": "^29.7.0",
-    "nodemon": "^3.1.10",
-    "supertest": "^6.3.3"
+    "nodemon": "^3.1.10"
   },
   "keywords": [
     "ai",
     "portfolio",
-    "mistral",
-    "llm",
+    "rag",
+    "embeddings",
     "chatbot",
     "express",
     "nodejs"
