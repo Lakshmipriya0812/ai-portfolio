@@ -284,20 +284,53 @@ router.post('/', validateChatRequest, async (req, res) => {
     }
     const guard = enforceGuardrails(results, { minScore: parseFloat(process.env.SCORE_THRESHOLD) || 0.35 });
     if (guard.allowed) {
-      const composed = composeAnswer(results);
-      const structured = formatStructured(results[0].doc);
-      const enableRephrase = String(process.env.REPHRASE_ENABLED || 'true') === 'true';
-      if (enableRephrase) {
-        try {
-          finalContent = await rephraseAnswer(composed, message);
-          aiGenerated = true;
-        } catch (e) {
+      // Check if this is a general "projects" query
+      const isProjectsQuery = /projects?/i.test(message) && !results.some(r => r.doc.type !== 'project');
+      
+      if (isProjectsQuery) {
+        // For projects queries, get all projects from the index
+        const allProjects = index.documents.filter(doc => doc.type === 'project');
+        const allProjectResults = allProjects.map(project => ({
+          doc: project,
+          score: 1.0 // High score since we're explicitly asking for all projects
+        }));
+        
+        const composed = composeAnswer(allProjectResults);
+        const structured = {
+          type: 'projects',
+          title: 'Projects',
+          projects: allProjectResults.map(r => formatStructured(r.doc))
+        };
+        
+        const enableRephrase = String(process.env.REPHRASE_ENABLED || 'true') === 'true';
+        if (enableRephrase) {
+          try {
+            finalContent = await rephraseAnswer(composed, message);
+            aiGenerated = true;
+          } catch (e) {
+            finalContent = composed;
+          }
+        } else {
           finalContent = composed;
         }
+        data = { structured };
       } else {
-        finalContent = composed;
+        // Regular single result handling
+        const composed = composeAnswer(results);
+        const structured = formatStructured(results[0].doc);
+        const enableRephrase = String(process.env.REPHRASE_ENABLED || 'true') === 'true';
+        if (enableRephrase) {
+          try {
+            finalContent = await rephraseAnswer(composed, message);
+            aiGenerated = true;
+          } catch (e) {
+            finalContent = composed;
+          }
+        } else {
+          finalContent = composed;
+        }
+        data = { structured };
       }
-      data = { structured };
     } else {
       finalContent = guard.message;
     }

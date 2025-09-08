@@ -17,14 +17,13 @@ export function enforceGuardrails(results, { minScore = 0.35 } = {}) {
 }
 
 export function composeAnswer(results) {
-  const best = results[0];
-  const doc = best.doc || {};
-  const meta = doc.metadata || {};
-  const type = doc.type || meta.section || 'knowledge-base';
-  const source = meta.section || type;
-
-  const formatted = formatDocumentForDisplay(doc);
-  return `${formatted}\n\n(source: ${source})`;
+  return results
+    .map(({ doc }) => {
+      const formatted = formatDocumentForDisplay(doc);
+      const source = doc.metadata?.section || doc.type || 'info';
+      return `${formatted}\n\n(source: ${source})`;
+    })
+    .join('\n\n---\n\n'); 
 }
 
 function formatDocumentForDisplay(doc) {
@@ -41,6 +40,9 @@ function formatDocumentForDisplay(doc) {
         : (typeof meta.technologies === 'string' ? meta.technologies : '');
       const highlights = Array.isArray(meta.highlights) ? meta.highlights : [];
     
+      const github = meta.github;
+      const demo = meta.demo || meta.demoVideo;
+    
       let description = meta.description;
       if (!description && typeof content === 'string') {
         try {
@@ -48,8 +50,7 @@ function formatDocumentForDisplay(doc) {
           if (parsed?.description) {
             description = parsed.description;
           }
-        } catch (_) {
-        }
+        } catch (_) {}
       }
     
       const lines = [];
@@ -62,9 +63,12 @@ function formatDocumentForDisplay(doc) {
         lines.push('✨ Highlights:');
         for (const h of highlights) lines.push(`  • ${h}`);
       }
+      if (github) lines.push(`🔗 GitHub: ${github}`);
+      if (demo) lines.push(`▶️ Demo: ${demo}`);
     
       return lines.filter(Boolean).join('\n');
     }
+    
     
 
     case 'skill': {
@@ -131,9 +135,12 @@ export function formatStructured(doc) {
     case 'project':
       return {
         ...base,
+        name: meta.name || base.title || '',
         description: meta.description || '',
         technologies: Array.isArray(meta.technologies) ? meta.technologies : (typeof meta.technologies === 'string' ? meta.technologies.split(/\s*,\s*/) : []),
-        highlights: Array.isArray(meta.highlights) ? meta.highlights : []
+        highlights: Array.isArray(meta.highlights) ? meta.highlights : [],
+        github: meta.github || '',
+        demo: meta.demo || meta.demoVideo || ''
       };
     case 'experience':
       return {
