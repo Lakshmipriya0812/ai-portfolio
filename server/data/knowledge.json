@@ -31,9 +31,9 @@
         ]
       },
       {
-        "role": "Full Stack Developer / Web Design Intern",
+        "role": "Full Stack Developer",
         "company": "Intellint Technology LLP",
-        "period": "Apr 2022 - Dec 2022 / Mar 2020 - Jul 2020",
+        "period": "Apr 2022 - Dec 2022",
         "location": "Chennai, India",
         "highlights": [
           "Engineered client portal for shipment tracking and invoicing with React, Node.js, PostgreSQL",
@@ -46,21 +46,37 @@
     "projects": [
       {
         "name": "Sonic Touch – AI Powered E-commerce for Visually Impaired Users",
-        "technologies": "React, Node.js, Tailwind, Rasa, AWS, Docker",
+        "technologies": "React, Node.js, Tailwind, MongoDB, Rasa, AWS, Docker",
         "highlights": [
           "Deployed voice-enabled e-commerce platform, improving accessibility engagement by 85%",
           "Integrated AI-powered assistant with Rasa for conversational interactions",
           "Containerized full-stack application for cloud deployment"
-        ]
+        ],
+        "github": "https://github.com/Lakshmipriya0812/Sonic-Touch-AI",
+        "demo": "https://youtu.be/Lt-gNI9ZyOI"
       },
       {
         "name": "Dungeon Crawler Game Engine",
-        "technologies": "Java, GitLab CI/CD, Design Patterns",
+        "technologies": "Java, GitLab CI/CD, Design Patterns, TDD, XP, Automation Testing",
         "highlights": [
           "Designed Java-based game with GUI, player movement, enemies, and power-ups",
           "Applied TDD and XP practices achieving 95%+ unit test coverage",
           "Automated CI/CD pipelines with GitLab ensuring reliable deployments"
-        ]
+        ],
+        "github": "https://github.com/Lakshmipriya0812/Dungeon-Crawler",
+        "demo": ""
+      },
+      {
+        "name": "Chess Board Move Validation",
+        "technologies": "Java, Jira, TDD, Sprint Planning, Automation Testing",
+        "highlights": [
+          "Created a college project validating chess moves within a 10-day deadline",
+          "Used Jira for task management, created a project charter, and prioritized essential project features, reducing bug occurrence by 20% through rigorous quality assurance practices (TDD)",
+          "Implemented sprint planning methodologies to manage tasks and meet deadlines",
+          "Conducted software testing protocols, achieving a 94% accuracy rate, ensuring robust performance"
+        ],
+        "github": "https://github.com/Lakshmipriya0812/Chess-Board-Move-Validation",
+        "demo": ""
       },
       {
         "name": "Face Mask Detection and Verification System",
@@ -68,16 +84,45 @@
         "highlights": [
           "Prepared and preprocessed dataset for high-quality training",
           "Trained ResNet50 for mask detection and performed face verification using cosine similarity"
-        ]
+        ],
+        "github": "https://github.com/Lakshmipriya0812/Face-Mask-Deduction",
+        "demo": ""
       },
       {
         "name": "Ethereum Token Development",
-        "technologies": "Solidity, MetaMask, ERC-20",
+        "technologies": "JavaScript, Solidity, Smart Contracts, MetaMask, ERC-20",
         "highlights": [
           "Created custom ERC-20 token reducing gas fees by 40%",
-          "Integrated MetaMask for seamless user transactions with 99% success rate"
-        ]
-      }
+          "Integrated MetaMask for seamless user transactions with 99% success rate",
+          "Coordinated tasks with Kanban for weekly sprints, task execution, and independent workflow management"
+        ],
+        "github": "https://github.com/Lakshmipriya0812/Token-using-Etherum-on-blockchain",
+        "demo": ""
+      },
+      {
+        "name": "What Should I Eat? – Dietary Assistance Web Application (Capstone)",
+        "technologies": "HTML, CSS, JavaScript, MongoDB, Node.js, Express.js, Edamam API, Google OAuth, Google Cloud, GoDaddy",
+        "highlights": [
+          "Developed a full-stack meal recommendation app using the Edamam API, increasing user engagement by 40%",
+          "Implemented secure login with Google OAuth and OTP verification, raising adoption rate by 25%",
+          "Optimized backend performance with caching, load balancing, and scheduled Cron jobs, reducing response time by 30%",
+          "Deployed frontend/backend via GoDaddy hosting and Google Cloud, ensuring high availability and global accessibility"
+        ],
+        "github": "https://github.com/Lakshmipriya0812/What-Should-I-Eat",
+        "demo": ""
+      },
+      {
+        "name": "Car Parking System – Android Reservation App",
+        "technologies": "Java,Android, MVVM, Google Maps API, PHP",
+        "highlights": [
+          "Architected native Android app using MVVM architecture for parking reservations, improving modularity by 40%",
+          "Connected Google Maps API for real-time location views, increasing user interaction by 60%",
+          "Created PHP backend for live booking and slot management, enhancing reliability by 35%",
+          "Implemented real-time updates and payment confirmation, reducing search times by 50%"
+        ],
+        "github": "https://github.com/Lakshmipriya0812/Car-Parking-Application",
+        "demo": ""
+      }    
     ],
     
     "contact": {
