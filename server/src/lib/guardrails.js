@@ -40,9 +40,10 @@ function formatDocumentForDisplay(doc) {
         : (typeof meta.technologies === 'string' ? meta.technologies : '');
       const highlights = Array.isArray(meta.highlights) ? meta.highlights : [];
     
+
       const github = meta.github;
       const demo = meta.demo || meta.demoVideo;
-    
+
       let description = meta.description;
       if (!description && typeof content === 'string') {
         try {
@@ -51,6 +52,7 @@ function formatDocumentForDisplay(doc) {
             description = parsed.description;
           }
         } catch (_) {}
+
       }
     
       const lines = [];
@@ -63,13 +65,13 @@ function formatDocumentForDisplay(doc) {
         lines.push('✨ Highlights:');
         for (const h of highlights) lines.push(`  • ${h}`);
       }
+
       if (github) lines.push(`🔗 GitHub: ${github}`);
       if (demo) lines.push(`▶️ Demo: ${demo}`);
+
     
       return lines.filter(Boolean).join('\n');
     }
-    
-    
 
     case 'skill': {
       const name = meta.name || title;
