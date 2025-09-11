@@ -77,8 +77,26 @@ function formatDocumentForDisplay(doc) {
     }
 
     case 'skills': {
-      return `🛠 Skills:\n${content}`;
+      // Expect either categories of skills or flat skills array in metadata or content
+      if (Array.isArray(meta.categories)) {
+        // If categories exist, flatten skills for display
+        const allSkills = meta.categories.flatMap(cat => cat.skills || []);
+        return `🛠 Skills:\n${allSkills.join(', ')}`;
+      } else {
+        let skillsList = [];
+        if (Array.isArray(meta.skills)) skillsList = meta.skills;
+        else if (typeof doc.content === 'string') {
+          try {
+            const parsed = JSON.parse(doc.content);
+            if (Array.isArray(parsed?.skills)) skillsList = parsed.skills;
+          } catch (_) {
+            skillsList = doc.content.split(/\s*,\s*|\n+/).map(s => s.trim()).filter(Boolean);
+          }
+        }
+        return `🛠 Skills:\n${skillsList.join(', ')}`;
+      }
     }
+    
 
     case 'education': {
       const institution = meta.institution || title;
@@ -171,18 +189,26 @@ export function formatStructured(doc) {
       return { ...base, name };
     }
     case 'skills': {
-      let skills = [];
-      if (Array.isArray(meta.skills)) skills = meta.skills;
-      else if (typeof doc.content === 'string') {
-        try {
-          const parsed = JSON.parse(doc.content);
-          if (Array.isArray(parsed?.skills)) skills = parsed.skills;
-        } catch (_) {
-          skills = doc.content.split(/\s*,\s*|\n+/).map(s => s.trim()).filter(Boolean);
+      // Return categories or skills as array
+      if (Array.isArray(meta.categories)) {
+        // Flatten categories to one skills array if needed
+        const skills = meta.categories.flatMap(cat => cat.skills || []);
+        return { ...base, categories: meta.categories, skills };
+      } else {
+        let skills = [];
+        if (Array.isArray(meta.skills)) skills = meta.skills;
+        else if (typeof doc.content === 'string') {
+          try {
+            const parsed = JSON.parse(doc.content);
+            if (Array.isArray(parsed?.skills)) skills = parsed.skills;
+          } catch (_) {
+            skills = doc.content.split(/\s*,\s*|\n+/).map(s => s.trim()).filter(Boolean);
+          }
         }
+        return { ...base, skills };
       }
-      return { ...base, skills };
     }
+    
     default:
       return { ...base, text: doc.content || '' };
   }

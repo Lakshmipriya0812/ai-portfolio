@@ -1,7 +1,45 @@
 {
     "about": "I am Lakshmipriya RajeshKanna, a software engineer with a Master’s from Drexel University. I specialize in full-stack web development, DevOps, and AI-powered systems. I am experienced in Python, Java, JavaScript, React, Spring Boot, SQL, and cloud platforms like AWS.",
     
-    "skills": "Python, Java, JavaScript, SQL, C++, C#, React, Next.js, TailwindCSS, Node.js, Express.js, Spring Boot, Flask, REST API, Kafka, Docker, Kubernetes, Terraform, Git, GitHub Actions, GitLab CI/CD, Jenkins, AWS EC2, S3, MySQL, MongoDB, PostgreSQL, Neo4j, JUnit, Mockito, Jest, TDD, XP, Agile",
+    "skills": {
+      "title": "Skills & Expertise",
+      "technicalSkills": {
+        "title": "Technical Skills",
+        "categories": [
+          {
+            "title": "Frontend",
+            "skills": ["React", "Next.js", "TailwindCSS", "JavaScript", "CSS", "HTML"]
+          },
+          {
+            "title": "Backend",
+            "skills": ["Python", "Java", "Spring Boot", "Flask", "Node.js", "Express.js", "Docker"]
+          },
+          {
+            "title": "Databases",
+            "skills": ["MySQL", "MongoDB", "PostgreSQL", "Neo4j"]
+          },
+          {
+            "title": "DevOps & CI/CD",
+            "skills": ["Git", "GitHub Actions", "Jenkins", "Terraform", "AWS EC2", "S3"]
+          },
+          {
+            "title": "Testing",
+            "skills": ["JUnit", "Mockito", "Jest", "TDD"]
+          },
+          {
+            "title": "Soft Skills",
+            "skills": ["Communication", "Teamwork", "Problem Solving", "Leadership", "Adaptability"]
+          },
+          {
+            "title": "Design Tools",
+            "skills": ["Figma", "Canva", "Adobe Illustrator", "Sketch"]
+          },
+          {
+            "title": "AI Tools",
+            "skills": ["ChatGPT", "Vercel AI SDK", "TensorFlow", "OpenAI API"]
+          }]
+      }
+    },
     
     "education": "Master of Science in Software Engineering, Drexel University, Philadelphia, PA (GPA: 3.72); Bachelor of Technology in Information Technology, Sona College of Technology, Salem, India (GPA: 3.8)",
     
