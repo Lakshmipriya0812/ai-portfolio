@@ -146,13 +146,11 @@ export function ExpandableCard({ projects }: ExpandableCardProps) {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.8, opacity: 0, y: 50 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className="w-full max-w-[800px] h-[90vh] flex flex-col bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden"
+              className="w-full max-w-[800px] max-h-[90vh] overflow-y-auto flex flex-col bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden"
             >
               {/* Header with gradient */}
-              <div className="relative h-48 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">
-                <div className="absolute inset-0 bg-black/10"></div>
-                {/*<div className="text-white text-6xl relative z-10">🚀</div>*/}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+              <div className="relative h-16 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 flex items-center">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Project Overview</h2>
               </div>
 
               {/* Content area with proper scrolling */}
@@ -168,14 +166,14 @@ export function ExpandableCard({ projects }: ExpandableCardProps) {
 
                     <div className="flex gap-3 ml-6">
                       {active.github && (
-                        <a
-                          href={active.github}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="px-4 py-2 text-sm rounded-full font-semibold bg-gray-900 text-white hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg"
-                        >
-                          GitHub
-                        </a>
+                       <a
+                       href={active.github}
+                       target="_blank"
+                       rel="noreferrer"
+                       className="px-4 py-2 text-sm rounded-full font-semibold text-white bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-800 hover:to-black transition-all duration-200 shadow-md hover:shadow-lg"
+                     >
+                       GitHub
+                     </a>                     
                       )}
                       {active.demo && (
                         <a
@@ -192,73 +190,91 @@ export function ExpandableCard({ projects }: ExpandableCardProps) {
                 </div>
                 
                 {/* Scrollable content */}
-                <div className="flex-1 overflow-y-auto">
-                  <div className="p-6 space-y-8">
-                    {/* Highlights */}
-                    {Array.isArray(active.highlights) && active.highlights.length > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: 0.1 }}
-                      >
-                        <h4 className="font-bold text-gray-900 dark:text-white text-lg mb-4 flex items-center gap-3">
-                          <span className="text-yellow-500 text-xl">✨</span>
-                          Highlights
-                        </h4>
-                        <ul className="space-y-3">
-                          {active.highlights.map((highlight, i) => (
-                            <li key={i} className="text-gray-700 dark:text-gray-300 flex items-start gap-3 text-base leading-relaxed">
-                              <span className="text-indigo-500 mt-2 text-lg font-bold">•</span>
-                              <span>{highlight}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </motion.div>
-                    )}
+                <div className="flex-1">
+                <div className="p-6 space-y-10">
+                {/* Highlights */}
+                {Array.isArray(active.highlights) && active.highlights.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.1 }}
+                    className="space-y-4"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="w-1 h-5 bg-indigo-500 rounded-sm" />
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white tracking-tight">
+                        Key Contributions
+                      </h4>
+                    </div>
+                    <ul className="space-y-3 list-none">
+                      {active.highlights.map((highlight, i) => (
+                        <li key={i} className="flex items-start gap-3 text-gray-700 dark:text-gray-300 text-[15px] leading-relaxed">
+                          <span className="mt-1.5 text-indigo-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
+                              <circle cx="10" cy="10" r="4" />
+                            </svg>
+                          </span>
+                          <span>{highlight}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </motion.div>
+                )}
 
-                    {/* Technologies */}
-                    {(active.technologies || active.tech) && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: 0.2 }}
-                      >
-                        <h4 className="font-bold text-gray-900 dark:text-white text-lg mb-4 flex items-center gap-3">
-                          <span className="text-blue-500 text-xl">💻</span>
-                          Technologies
-                        </h4>
-                        <div className="flex flex-wrap gap-3">
-                          {(Array.isArray(active.technologies) ? active.technologies : 
-                            Array.isArray(active.tech) ? active.tech :
-                            String(active.technologies || active.tech).split(/\s*,\s*/)).filter(Boolean).map((tech, i) => (
-                            <span key={i} className="px-2 py-1 text-xs rounded-full bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 border border-indigo-200 font-medium">
-                              {tech}
-                            </span>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
+                {/* Technologies */}
+                {(active.technologies || active.tech) && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.2 }}
+                    className="space-y-4"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="w-1 h-5 bg-rose-500 rounded-sm" />
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white tracking-tight">
+                        Technologies Used
+                      </h4>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      {(Array.isArray(active.technologies) ? active.technologies : 
+                        Array.isArray(active.tech) ? active.tech :
+                        String(active.technologies || active.tech).split(/\s*,\s*/))
+                        .filter(Boolean)
+                        .map((tech, i) => (
+                          <span
+                            key={i}
+                            className="px-5 py-3 text-xs rounded-full font-semibold text-white bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-800 hover:to-gray-700 transition-all duration-200 shadow-sm hover:shadow-lg"
+              >
+                            {tech}
+                          </span>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
 
-                    {/* Additional project details if available */}
-                    {active.link && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: 0.3 }}
-                        className="pt-4"
-                      >
-                        <a
-                          href={active.link}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full font-semibold hover:from-indigo-600 hover:to-purple-600 transition-all duration-200 shadow-lg hover:shadow-xl"
-                        >
-                          <span>🔗</span>
-                          Visit Project
-                        </a>
-                      </motion.div>
-                    )}
-                  </div>
+                {/* Project Link (optional CTA) */}
+                {active.link && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.3 }}
+                    className="pt-4"
+                  >
+                    <a
+                      href={active.link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-5 py-3 text-xs rounded-full font-semibold text-white bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-800 hover:to-gray-700 transition-all duration-200 shadow-sm hover:shadow-lg"
+              >
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M10 14L21 3M21 3h-6M21 3v6" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      Visit Project
+                    </a>
+                  </motion.div>
+                )}
+              </div>
+
                 </div>
               </div>
             </motion.div>
@@ -283,47 +299,61 @@ export function ExpandableCard({ projects }: ExpandableCardProps) {
           ref={scrollRef}
           className="scroll-smooth flex overflow-x-auto gap-4 px-8 py-6 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 hide-scrollbar"
         >
-        {projects.map((project, i) => (
+        {projects.map((project) => (
           <motion.div
             key={`card-${project.name || project.title}-${id}`}
             layoutId={`card-${project.name || project.title}-${id}`}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.05, duration: 0.4, ease: "easeOut" }}
+            whileHover={{
+              rotate: [0, -2, 2, -2, 0],
+              scale: 1.02
+            }}
+            transition={{
+              duration: 0.5,
+              ease: "easeInOut"
+            }}
             onClick={() => setActive(project)}
-            className="flex-shrink-0 w-[320px] sm:w-[380px] md:w-[400px] h-[200px] snap-start p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-md rounded-2xl cursor-pointer"
+            className="flex-shrink-0 w-[250px] sm:w-[250px] md:w-[250px] h-[300px] snap-start p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-md rounded-2xl cursor-pointer"
           >
 
               <div className="flex gap-4 flex-col md:flex-row items-center md:items-start">
                 
-                <div className="flex-1 text-center md:text-left">
-                  <motion.h3
-                    layoutId={`title-${project.name || project.title}-${id}`}
-                    className="font-bold text-gray-900 dark:text-white text-lg mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate max-w-xs sm:max-w-sm md:max-w-md"
-                  >
-                    {project.name || project.title || 'Untitled Project'}
-                  </motion.h3>
+                <div className="flex-1 text-center md:text-left line-clamp-4">
+                <motion.h3
+                  layoutId={`title-${project.name || project.title}-${id}`}
+                  className="font-bold text-gray-900 dark:text-white text-lg mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2 max-w-xs sm:max-w-sm md:max-w-md"
+                >
+                  {project.name || project.title || 'Untitled Project'}
+                </motion.h3>
+
+
                   
                   {/* Technologies preview */}
                   {(project.technologies || project.tech) && (
-                    <div className="mt-7 flex flex-wrap gap-1 justify-center md:justify-start">
-                      {(Array.isArray(project.technologies) ? project.technologies : 
-                        Array.isArray(project.tech) ? project.tech :
-                        String(project.technologies || project.tech).split(/\s*,\s*/)).filter(Boolean).slice(0, 3).map((tech, i) => (
-                        <span key={i} className="px-2 py-1 text-xs rounded-full bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 border border-indigo-200 font-medium">
-                          {tech}
-                        </span>
-                      ))}
-                      {((Array.isArray(project.technologies) ? project.technologies : 
-                        Array.isArray(project.tech) ? project.tech :
-                        String(project.technologies || project.tech).split(/\s*,\s*/)).filter(Boolean).length > 3) && (
-                        <span className="px-2 py-1 text-xs rounded-full border border-gray-300 text-gray-700 bg-white dark:bg-gray-800 dark:text-white dark:border-gray-600 font-medium">
-                          +{((Array.isArray(project.technologies) ? project.technologies : 
-                            Array.isArray(project.tech) ? project.tech :
-                            String(project.technologies || project.tech).split(/\s*,\s*/)).filter(Boolean).length - 3)}
-                        </span>
-                      )}
-                    </div>
+                    <div className="mt-10 w-full flex flex-wrap gap-1 justify-center md:justify-start">
+                    {(Array.isArray(project.technologies) ? project.technologies : 
+                      Array.isArray(project.tech) ? project.tech :
+                      String(project.technologies || project.tech).split(/\s*,\s*/)).filter(Boolean).slice(0, 3).map((tech, i) => (
+                      <span
+                        key={i}
+                        className="px-2 py-1 max-w-full text-xs rounded-full bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 border border-indigo-200 font-medium whitespace-normal break-words"
+                      >
+                        {tech}
+                      </span>
+                    ))}
+                    {((Array.isArray(project.technologies) ? project.technologies : 
+                      Array.isArray(project.tech) ? project.tech :
+                      String(project.technologies || project.tech).split(/\s*,\s*/)).filter(Boolean).length > 3) && (
+                      <span
+                        className="px-2 py-1 max-w-full text-xs rounded-full bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 border border-indigo-200 font-medium whitespace-normal break-words"
+                      >
+                        +{((Array.isArray(project.technologies) ? project.technologies : 
+                          Array.isArray(project.tech) ? project.tech :
+                          String(project.technologies || project.tech).split(/\s*,\s*/)).filter(Boolean).length - 3)}
+                      </span>
+                    )}
+                  </div>                  
                   )}
                 </div>
               </div>

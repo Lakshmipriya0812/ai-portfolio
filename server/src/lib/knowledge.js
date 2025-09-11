@@ -40,18 +40,64 @@ function normalizeKnowledge(json) {
     });
   }
 
-  if (Array.isArray(json.skills)) {
-    for (let i = 0; i < json.skills.length; i++) {
-      const skill = json.skills[i];
+  if (json.skills) {
+    const { technicalSkills, softSkills, designTools, aiTools } = json.skills;
+  
+    // Technical skills categories
+    if (technicalSkills?.categories) {
       documents.push({
-        id: `skill:${i}`,
-        type: 'skill',
-        title: skill?.name || 'Skill',
-        content: typeof skill === 'string' ? skill : JSON.stringify(skill),
-        metadata: { section: 'skills' }
+        id: 'skills:technical',
+        type: 'skills',
+        title: technicalSkills.title || 'Technical Skills',
+        content: '', // We'll skip flat content here
+        metadata: { section: 'technicalSkills', categories: technicalSkills.categories }
       });
     }
+  
+    // Soft skills
+    if (softSkills?.skills) {
+      documents.push({
+        id: 'skills:soft',
+        type: 'skills',
+        title: softSkills.title || 'Soft Skills',
+        content: softSkills.skills.join(', '),
+        metadata: { section: 'softSkills', skills: softSkills.skills }
+      });
+    }
+  
+    // Design tools
+    if (designTools?.skills) {
+      documents.push({
+        id: 'skills:designTools',
+        type: 'skills',
+        title: designTools.title || 'Design Tools',
+        content: designTools.skills.join(', '),
+        metadata: { section: 'designTools', skills: designTools.skills }
+      });
+    }
+  
+    // AI tools
+    if (aiTools?.skills) {
+      documents.push({
+        id: 'skills:aiTools',
+        type: 'skills',
+        title: aiTools.title || 'AI Tools',
+        content: aiTools.skills.join(', '),
+        metadata: { section: 'aiTools', skills: aiTools.skills }
+      });
+    }
+  } else if (Array.isArray(json.skills)) {
+    // fallback for old flat skills array
+    documents.push({
+      id: 'skills:all',
+      type: 'skills',
+      title: 'Technical Skills',
+      content: json.skills.join(', '),
+      metadata: { section: 'skills', skills: json.skills }
+    });
   }
+  
+  
 
   if (Array.isArray(json.projects)) {
     for (let i = 0; i < json.projects.length; i++) {
