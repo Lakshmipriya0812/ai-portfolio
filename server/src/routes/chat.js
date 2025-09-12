@@ -9,387 +9,268 @@ import { enforceGuardrails, composeAnswer, formatStructured } from '../lib/guard
 import { rephraseAnswer } from '../lib/rephrase.js';
 
 const router = express.Router();
-// In-memory conversation storage (in production, use a database)
-const conversations = new Map();
 
-// In-memory stores for rate limiting and deduplication
-const activeRequests = new Map(); // Track active embedding requests
-const sessionUsage = new Map(); // Track per-session usage
-const requestCache = new Map(); // Cache for repeated questions
+// In-memory conversation storage (use DB in production)
+const conversations = new Map();
+const activeRequests = new Map();
+const sessionUsage = new Map();
+const requestCache = new Map();
 
 // Session limits configuration
 const SESSION_LIMITS = {
   maxRequestsPerHour: parseInt(process.env.SESSION_MAX_REQUESTS_PER_HOUR) || 10,
   maxRequestsPerDay: parseInt(process.env.SESSION_MAX_REQUESTS_PER_DAY) || 50,
-  cacheExpiryMs: parseInt(process.env.REQUEST_CACHE_EXPIRY_MS) || 5 * 60 * 1000, // 5 minutes
-  staticCacheExpiryMs: parseInt(process.env.STATIC_CACHE_EXPIRY_MS) || 60 * 60 * 1000, // 1 hour for static content
-  requestTimeoutMs: parseInt(process.env.EMBEDDING_REQUEST_TIMEOUT_MS) || 30000 // 30 seconds
+  cacheExpiryMs: parseInt(process.env.REQUEST_CACHE_EXPIRY_MS) || 5 * 60 * 1000,
+  staticCacheExpiryMs: parseInt(process.env.STATIC_CACHE_EXPIRY_MS) || 60 * 60 * 1000,
+  requestTimeoutMs: parseInt(process.env.EMBEDDING_REQUEST_TIMEOUT_MS) || 30000
 };
 
-// Static content patterns that should be cached longer
 const STATIC_CONTENT_PATTERNS = [
-  /contact/i,
-  /email/i,
-  /phone/i,
-  /address/i,
-  /location/i,
-  /fun/i,
-  /hobby/i,
-  /hobbies/i,
-  /interest/i,
-  /interests/i,
-  /skill/i,
-  /skills/i,
-  /technology/i,
-  /technologies/i,
-  /programming/i,
-  /languages/i,
-  /about/i,
-  /who are you/i,
-  /introduction/i
+  /contact/i, /email/i, /phone/i, /address/i, /location/i,
+  /fun/i, /hobby/i, /hobbies/i, /interest/i, /interests/i,
+  /skill/i, /skills/i, /technology/i, /technologies/i,
+  /programming/i, /languages/i, /about/i, /who are you/i, /introduction/i
 ];
 
-// Helper functions for rate limiting and caching
+// ------------------ Helper Functions ------------------
+
+// Generate session ID
 function getSessionId(req) {
   return req.ip + '_' + (req.headers['user-agent'] || 'unknown');
 }
 
+// Rate limit check
 function checkSessionLimits(sessionId) {
   const now = Date.now();
-  const hourAgo = now - (60 * 60 * 1000);
-  const dayAgo = now - (24 * 60 * 60 * 1000);
-  
+  const hourAgo = now - 3600_000;
+  const dayAgo = now - 24 * 3600_000;
+
   if (!sessionUsage.has(sessionId)) {
     sessionUsage.set(sessionId, { requests: [], lastReset: now });
   }
-  
   const usage = sessionUsage.get(sessionId);
-  
-  // Clean old requests
-  usage.requests = usage.requests.filter(timestamp => timestamp > dayAgo);
-  
-  const hourlyRequests = usage.requests.filter(timestamp => timestamp > hourAgo);
-  const dailyRequests = usage.requests.length;
-  
+  usage.requests = usage.requests.filter(ts => ts > dayAgo);
+
+  const hourlyRequests = usage.requests.filter(ts => ts > hourAgo);
   if (hourlyRequests.length >= SESSION_LIMITS.maxRequestsPerHour) {
-    return { allowed: false, reason: 'hourly_limit', resetTime: Math.min(...hourlyRequests) + (60 * 60 * 1000) };
+    return { allowed: false, reason: 'hourly_limit', resetTime: Math.min(...hourlyRequests) + 3600_000 };
   }
-  
-  if (dailyRequests >= SESSION_LIMITS.maxRequestsPerDay) {
-    return { allowed: false, reason: 'daily_limit', resetTime: Math.min(...usage.requests) + (24 * 60 * 60 * 1000) };
+  if (usage.requests.length >= SESSION_LIMITS.maxRequestsPerDay) {
+    return { allowed: false, reason: 'daily_limit', resetTime: Math.min(...usage.requests) + 24 * 3600_000 };
   }
-  
   return { allowed: true };
 }
 
+// Record session usage
 function recordSessionUsage(sessionId) {
-  const now = Date.now();
   if (!sessionUsage.has(sessionId)) {
-    sessionUsage.set(sessionId, { requests: [], lastReset: now });
+    sessionUsage.set(sessionId, { requests: [], lastReset: Date.now() });
   }
-  sessionUsage.get(sessionId).requests.push(now);
+  sessionUsage.get(sessionId).requests.push(Date.now());
 }
 
+// Check if question is static content
 function isStaticContent(question) {
   return STATIC_CONTENT_PATTERNS.some(pattern => pattern.test(question));
 }
 
+// Cache helpers
 function getCachedResponse(question) {
-  const questionKey = question.toLowerCase().trim();
-  const cached = requestCache.get(questionKey);
-  
-  if (cached) {
-    const isStatic = isStaticContent(question);
-    const cacheExpiry = isStatic ? SESSION_LIMITS.staticCacheExpiryMs : SESSION_LIMITS.cacheExpiryMs;
-    
-    if (Date.now() - cached.timestamp < cacheExpiry) {
-      console.log(`Returning ${isStatic ? 'static' : 'regular'} cached response for:`, question);
-      return cached.data;
-    } else {
-      // Remove expired cache entry
-      requestCache.delete(questionKey);
-    }
-  }
+  const key = question.toLowerCase().trim();
+  const cached = requestCache.get(key);
+  if (!cached) return null;
+
+  const expiry = cached.isStatic ? SESSION_LIMITS.staticCacheExpiryMs : SESSION_LIMITS.cacheExpiryMs;
+  if (Date.now() - cached.timestamp < expiry) return cached.data;
+
+  requestCache.delete(key);
   return null;
 }
 
 function cacheResponse(question, data) {
-  const questionKey = question.toLowerCase().trim();
+  const key = question.toLowerCase().trim();
   const isStatic = isStaticContent(question);
-  const cacheExpiry = isStatic ? SESSION_LIMITS.staticCacheExpiryMs : SESSION_LIMITS.cacheExpiryMs;
-  
-  requestCache.set(questionKey, {
-    data,
-    timestamp: Date.now(),
-    isStatic,
-    expiresAt: Date.now() + cacheExpiry
-  });
-  
-  console.log(`Cached ${isStatic ? 'static' : 'regular'} response for:`, question, `(expires in ${Math.round(cacheExpiry / 1000 / 60)} minutes)`);
+  const expiry = isStatic ? SESSION_LIMITS.staticCacheExpiryMs : SESSION_LIMITS.cacheExpiryMs;
+
+  requestCache.set(key, { data, timestamp: Date.now(), isStatic, expiresAt: Date.now() + expiry });
 }
 
-// Cleanup function to remove stale active requests
-function cleanupStaleRequests() {
+// Cleanup functions
+setInterval(() => {
   const now = Date.now();
-  for (const [key, timestamp] of activeRequests.entries()) {
-    if (now - timestamp > SESSION_LIMITS.requestTimeoutMs) {
-      activeRequests.delete(key);
-      console.log('Cleaned up stale request:', key);
-    }
+  for (const [key, ts] of activeRequests.entries()) {
+    if (now - ts > SESSION_LIMITS.requestTimeoutMs) activeRequests.delete(key);
   }
-}
+}, 5 * 60 * 1000);
 
-// Cleanup function to remove expired cache entries
-function cleanupExpiredCache() {
+setInterval(() => {
   const now = Date.now();
-  let cleanedCount = 0;
-  
   for (const [key, cached] of requestCache.entries()) {
-    if (cached.expiresAt && now > cached.expiresAt) {
-      requestCache.delete(key);
-      cleanedCount++;
-    }
+    if (cached.expiresAt && now > cached.expiresAt) requestCache.delete(key);
   }
-  
-  if (cleanedCount > 0) {
-    console.log(`Cleaned up ${cleanedCount} expired cache entries`);
+}, 10 * 60 * 1000);
+
+// Rephrase helper
+async function maybeRephrase(content, message) {
+  if (String(process.env.REPHRASE_ENABLED || 'true') === 'true') {
+    try { return { content: await rephraseAnswer(content, message), aiGenerated: true }; }
+    catch { return { content, aiGenerated: false }; }
   }
+  return { content, aiGenerated: false };
 }
 
-// Run cleanup every 5 minutes
-setInterval(cleanupStaleRequests, 5 * 60 * 1000);
-// Run cache cleanup every 10 minutes
-setInterval(cleanupExpiredCache, 10 * 60 * 1000);
+// Multi-entry query helper (projects / experience)
+async function handleMultiEntryQuery(type, title, index, message) {
+  const allDocs = index.documents.filter(doc => doc.type === type);
+  if (!allDocs.length) return null;
 
-// POST /api/chat - Send a message and get AI response
-router.post('/', validateChatRequest, async (req, res) => {
-  try {
-    const { message, conversationId } = req.body;
-    const sessionId = getSessionId(req);
-    
-    // Check session limits
-    const limitCheck = checkSessionLimits(sessionId);
-    if (!limitCheck.allowed) {
-      const resetTime = new Date(limitCheck.resetTime).toISOString();
-      return res.status(429).json({
-        error: 'Rate limit exceeded',
-        message: `Too many requests. ${limitCheck.reason === 'hourly_limit' ? 'Hourly' : 'Daily'} limit reached.`,
-        resetTime,
-        limitType: limitCheck.reason,
-        timestamp: new Date().toISOString()
-      });
-    }
-    
-    // Check cache first
-    const cachedResponse = getCachedResponse(message);
-    if (cachedResponse) {
-      console.log('Returning cached response for:', message);
-      return res.json(cachedResponse);
-    }
-    
-    // Check for active request deduplication
-    const requestKey = message.toLowerCase().trim();
-    if (activeRequests.has(requestKey)) {
-      console.log('Request already in progress for:', message);
-      return res.status(409).json({
-        error: 'Request in progress',
-        message: 'A similar request is already being processed. Please wait.',
-        timestamp: new Date().toISOString()
-      });
-    }
-    
-    // Mark request as active
-    activeRequests.set(requestKey, Date.now());
-    
-    // Record session usage
-    recordSessionUsage(sessionId);
-    
-    if (!message || typeof message !== 'string') {
-      return res.status(400).json({
-        error: 'Message is required and must be a string',
-        timestamp: new Date().toISOString()
-      });
-    }
+  const allResults = allDocs.map(doc => ({ doc, score: 1.0 }));
+  const composed = composeAnswer(allResults);
+  const structured = { type, title, items: allResults.map(r => formatStructured(r.doc)) };
 
-    // Get or create conversation
-    let conversation = conversations.get(conversationId);
-    if (!conversation) {
-      conversation = {
-        id: conversationId || uuidv4(),
-        messages: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      conversations.set(conversation.id, conversation);
-    }
+  const { content, aiGenerated } = await maybeRephrase(composed, message);
+  return { content, structured, aiGenerated };
+}
 
-    // Add user message to conversation
-    const userMessage = {
-      id: uuidv4(),
-      role: 'user',
-      content: message,
-      timestamp: new Date().toISOString()
+// Get or create conversation
+function getOrCreateConversation(conversationId) {
+  let conversation = conversations.get(conversationId);
+  if (!conversation) {
+    conversation = {
+      id: conversationId || uuidv4(),
+      messages: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
-    
+    conversations.set(conversation.id, conversation);
+  }
+  return conversation;
+}
+
+// ------------------ POST /api/chat ------------------
+router.post('/', validateChatRequest, async (req, res) => {
+  const { message, conversationId } = req.body;
+  const sessionId = getSessionId(req);
+
+  // Rate limit
+  const limitCheck = checkSessionLimits(sessionId);
+  if (!limitCheck.allowed) {
+    return res.status(429).json({
+      error: 'Rate limit exceeded',
+      message: `Too many requests. ${limitCheck.reason === 'hourly_limit' ? 'Hourly' : 'Daily'} limit reached.`,
+      resetTime: new Date(limitCheck.resetTime).toISOString(),
+      limitType: limitCheck.reason,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  // Cache check
+  const cached = getCachedResponse(message);
+  if (cached) return res.json(cached);
+
+  const requestKey = message.toLowerCase().trim();
+  if (activeRequests.has(requestKey)) {
+    return res.status(409).json({
+      error: 'Request in progress',
+      message: 'A similar request is already being processed. Please wait.',
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  activeRequests.set(requestKey, Date.now());
+  recordSessionUsage(sessionId);
+
+  try {
+    const conversation = getOrCreateConversation(conversationId);
+
+    // Add user message
+    const userMessage = { id: uuidv4(), role: 'user', content: message, timestamp: new Date().toISOString() };
     conversation.messages.push(userMessage);
     conversation.updatedAt = new Date().toISOString();
 
-    // Retrieval-augmented: query vector index first
+    // Load index
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
-    const storageDir = process.env.STORAGE_DIR ? join(__dirname, '..', '..', process.env.STORAGE_DIR) : join(__dirname, '..', '..', 'storage');
-    const index = loadIndex(storageDir);
+    const storageDir = process.env.STORAGE_DIR
+      ? join(__dirname, '..', '..', process.env.STORAGE_DIR)
+      : join(__dirname, '..', '..', 'storage');
+      const index = loadIndex(storageDir);
 
-    let finalContent;
-    let responseType = 'text';
-    let aiGenerated = false;
-    let data = undefined;
-
-    if (!index) {
-      return res.status(503).json({
-        error: 'Index not built',
-        message: 'Please run ingestion to build the knowledge index first.',
-        hint: 'POST /api/ingest',
-        timestamp: new Date().toISOString()
-      });
-    }
+      if (!index || !Array.isArray(index.documents)) {
+        return res.status(503).json({
+          error: 'Index not built or invalid',
+          message: 'Please run ingestion first to build a proper knowledge index.',
+          hint: 'POST /api/ingest',
+          timestamp: new Date().toISOString()
+        });
+      }      
 
     const model = process.env.EMBEDDINGS_MODEL || 'sentence-transformers/all-MiniLM-L6-v2';
     const topK = parseInt(process.env.RETRIEVAL_TOP_K) || 3;
-    
+
     let results;
-    try {
-      results = await retrieveRelevant(message, index, topK, { model });
-    } catch (embeddingError) {
-      console.error('Embedding service error:', embeddingError.message);
-      // Fallback: return a generic response when embeddings fail
+    try { results = await retrieveRelevant(message, index, topK, { model }); }
+    catch {
+      const timestamp = new Date().toISOString();
+      const responseId = uuidv4();
       return res.json({
         success: true,
         conversationId: conversation.id,
-        response: {
-          id: responseId,
-          content: "I'm currently experiencing technical difficulties with my knowledge base. Please try again in a few minutes, or contact me directly for assistance.",
-          type: 'text',
-          data: null,
-          timestamp,
-          aiGenerated: false
-        },
-        conversation: {
-          id: conversation.id,
-          messageCount: conversation.messages.length,
-          createdAt: conversation.createdAt,
-          updatedAt: conversation.updatedAt
-        }
+        response: { id: responseId, content: "Embedding service error. Try again later.", type: 'text', data: null, timestamp, aiGenerated: false },
+        conversation: { id: conversation.id, messageCount: conversation.messages.length, createdAt: conversation.createdAt, updatedAt: conversation.updatedAt }
       });
     }
-    const guard = enforceGuardrails(results, { minScore: parseFloat(process.env.SCORE_THRESHOLD) || 0.35 });
-    if (guard.allowed) {
-      // Check if this is a general "projects" query
-      const isProjectsQuery = /projects?/i.test(message) && !results.some(r => r.doc.type !== 'project');
+
+    // Determine multi-entry match
+    let finalContent, data, aiGenerated = false;
+    const lowerMsg = message.toLowerCase();
+
+    if (/projects?/i.test(lowerMsg)) {
+      const multi = await handleMultiEntryQuery('project', 'Projects', index, message);
+      if (multi) { finalContent = multi.content; data = { structured: multi.structured }; aiGenerated = multi.aiGenerated; }
+    } else if (/experience|work|internship|job/i.test(lowerMsg)) {
+      const multi = await handleMultiEntryQuery('experience', 'Experience', index, message);
+      if (multi) { finalContent = multi.content; data = { structured: multi.structured }; aiGenerated = multi.aiGenerated; }
+    }
+    // Fallback single result
+    if (!finalContent) {
+      const guard = enforceGuardrails(results, { minScore: parseFloat(process.env.SCORE_THRESHOLD) || 0.35 });
       
-      if (isProjectsQuery) {
-        // For projects queries, get all projects from the index
-        const allProjects = index.documents.filter(doc => doc.type === 'project');
-        const allProjectResults = allProjects.map(project => ({
-          doc: project,
-          score: 1.0 // High score since we're explicitly asking for all projects
-        }));
-        
-        const composed = composeAnswer(allProjectResults);
-        const structured = {
-          type: 'projects',
-          title: 'Projects',
-          projects: allProjectResults.map(r => formatStructured(r.doc))
-        };
-        
-        const enableRephrase = String(process.env.REPHRASE_ENABLED || 'true') === 'true';
-        if (enableRephrase) {
-          try {
-            finalContent = await rephraseAnswer(composed, message);
-            aiGenerated = true;
-          } catch (e) {
-            finalContent = composed;
-          }
-        } else {
-          finalContent = composed;
-        }
-        data = { structured };
-      } else {
-        // Regular single result handling
+      if (guard.allowed && results.length > 0) {
         const composed = composeAnswer(results);
         const structured = formatStructured(results[0].doc);
-        const enableRephrase = String(process.env.REPHRASE_ENABLED || 'true') === 'true';
-        if (enableRephrase) {
-          try {
-            finalContent = await rephraseAnswer(composed, message);
-            aiGenerated = true;
-          } catch (e) {
-            finalContent = composed;
-          }
-        } else {
-          finalContent = composed;
-        }
+        const rephrased = await maybeRephrase(composed, message);
+        finalContent = rephrased.content;
+        aiGenerated = rephrased.aiGenerated;
         data = { structured };
+      } else if (results.length === 0) {
+        finalContent = "I could not find any relevant information for your question.";
+      } else {
+        finalContent = guard.message;
       }
-    } else {
-      finalContent = guard.message;
     }
 
-    // Add AI response to conversation
+
+    // Add AI response
     const responseId = uuidv4();
     const timestamp = new Date().toISOString();
-    conversation.messages.push({
-      id: responseId,
-      role: 'assistant',
-      content: finalContent,
-      timestamp,
-      responseType,
-      data
-    });
+    conversation.messages.push({ id: responseId, role: 'assistant', content: finalContent, timestamp, responseType: 'text', data });
 
-    // Cache the response
     const responseData = {
       success: true,
       conversationId: conversation.id,
-      response: {
-        id: responseId,
-        content: finalContent,
-        type: responseType,
-        data,
-        timestamp,
-        aiGenerated
-      },
-      conversation: {
-        id: conversation.id,
-        messageCount: conversation.messages.length,
-        createdAt: conversation.createdAt,
-        updatedAt: conversation.updatedAt
-      }
+      response: { id: responseId, content: finalContent, type: 'text', data, timestamp, aiGenerated },
+      conversation: { id: conversation.id, messageCount: conversation.messages.length, createdAt: conversation.createdAt, updatedAt: conversation.updatedAt }
     };
-    
-    // Cache the response for future identical requests
+
     cacheResponse(message, responseData);
-    
-    // Clean up active request
-    activeRequests.delete(requestKey);
-    
-    // Return the response
     res.json(responseData);
 
   } catch (error) {
-    console.error('Error in chat endpoint:', error);
-    
-    // Clean up active request on error
-    const requestKey = req.body?.message?.toLowerCase().trim();
-    if (requestKey) {
-      activeRequests.delete(requestKey);
-    }
-    
-    res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to process chat message',
-      timestamp: new Date().toISOString()
-    });
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error', message: 'Failed to process chat message', timestamp: new Date().toISOString() });
+  } finally {
+    activeRequests.delete(requestKey);
   }
 });
 

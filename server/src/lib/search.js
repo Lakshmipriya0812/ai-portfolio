@@ -10,7 +10,13 @@ export async function buildIndexFromDocuments(documents, options = {}) {
   };
 }
 
-export async function retrieveRelevant(query, index, topK = 3, options = {}) {
+function parseDate(str) {
+  if (!str) return new Date(0); // fallback if no date
+  if (str.toLowerCase().includes('present')) return new Date(); // treat "Present" as today
+  return new Date(str);
+}
+
+export async function retrieveRelevant(query, index, options = {}) {
   const [queryVec] = await embedTexts([query], options);
   const scores = index.vectors.map(vec => cosineSimilarity(queryVec, vec));
 
@@ -19,16 +25,13 @@ export async function retrieveRelevant(query, index, topK = 3, options = {}) {
     .sort((a, b) => b.score - a.score);
 
   const expectedType = detectExpectedType(query);
-  if (expectedType) {
-    for (const r of ranked) {
-      const section = r.doc.type || r.doc.metadata?.section;
-      if (section === expectedType) {
-        r.score += 0.1;
-      }
-    }
-    ranked = ranked.sort((a, b) => b.score - a.score);
-  }
 
+  if (expectedType) {
+    const filtered = ranked.filter(r => r.doc.type.toLowerCase() === expectedType.toLowerCase());
+    if (filtered.length > 0) ranked = filtered;
+  }    
+
+  // Remove duplicates
   const uniqueRanked = [];
   const seen = new Set();
   for (const r of ranked) {
@@ -36,7 +39,6 @@ export async function retrieveRelevant(query, index, topK = 3, options = {}) {
       seen.add(r.doc.id);
       uniqueRanked.push(r);
     }
-    if (uniqueRanked.length >= topK) break;
   }
 
   return uniqueRanked;
@@ -44,7 +46,7 @@ export async function retrieveRelevant(query, index, topK = 3, options = {}) {
 
 function detectExpectedType(query) {
   query = query.toLowerCase();
-  if (query.includes('experience') || query.includes('worked at')) return 'experience';
+  if (query.includes('experience') || query.includes('job') || query.includes('work') || query.includes('internship')) return 'experience';
   if (query.includes('project')) return 'project';
   if (query.includes('education') || query.includes('study')) return 'education';
   if (query.includes('skills') || query.includes('know')) return 'skills';
