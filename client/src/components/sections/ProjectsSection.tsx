@@ -35,7 +35,6 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({ structured }) => {
 
   return (
     <div className="text-left space-y-4">
-      <h3 className="text-2xl font-semibold text-center mb-8">{title}</h3>
       {projects.length > 0 ? (
         <ExpandableCard projects={projects} />
       ) : (

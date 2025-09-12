@@ -14,7 +14,7 @@ export async function retrieveRelevant(query, index, topK = 3, options = {}) {
   const [queryVec] = await embedTexts([query], options);
   const scores = index.vectors.map(vec => cosineSimilarity(queryVec, vec));
 
-  const ranked = index.documents
+  let ranked = index.documents
     .map((doc, i) => ({ doc, score: scores[i] }))
     .sort((a, b) => b.score - a.score);
 
@@ -23,13 +23,23 @@ export async function retrieveRelevant(query, index, topK = 3, options = {}) {
     for (const r of ranked) {
       const section = r.doc.type || r.doc.metadata?.section;
       if (section === expectedType) {
-        r.score += 0.1; 
+        r.score += 0.1;
       }
     }
-    ranked.sort((a, b) => b.score - a.score);
+    ranked = ranked.sort((a, b) => b.score - a.score);
   }
 
-  return ranked.slice(0, topK);
+  const uniqueRanked = [];
+  const seen = new Set();
+  for (const r of ranked) {
+    if (!seen.has(r.doc.id)) {
+      seen.add(r.doc.id);
+      uniqueRanked.push(r);
+    }
+    if (uniqueRanked.length >= topK) break;
+  }
+
+  return uniqueRanked;
 }
 
 function detectExpectedType(query) {
