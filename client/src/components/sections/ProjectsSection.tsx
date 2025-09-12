@@ -18,7 +18,7 @@ interface ProjectsSectionProps {
 }
 
 const ProjectsSection: React.FC<ProjectsSectionProps> = ({ structured }) => {
-  const projectsFromArray: ProjectItem[] = structured?.projects || [];
+  const projectsFromArray: ProjectItem[] = structured?.items || [];
   const singleFromStructured: ProjectItem | null = projectsFromArray.length === 0 ? {
     name: structured?.name || structured?.title,
     title: structured?.title,
@@ -31,7 +31,7 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({ structured }) => {
     demo: structured?.demo
   } : null;
   const projects: ProjectItem[] = projectsFromArray.length > 0 ? projectsFromArray : (singleFromStructured ? [singleFromStructured] : []);
-  const title = structured?.title || '📁 Projects';
+
 
   return (
     <div className="text-left space-y-4">
