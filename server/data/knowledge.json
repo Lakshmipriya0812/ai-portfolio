@@ -83,14 +83,13 @@
     
     "projects": [
       {
-        "name": "Sonic Touch – AI Powered E-commerce for Visually Impaired Users",
+        "name": "Sonic Touch – AI Powered E-commerce",
         "technologies": "React, Node.js, Tailwind, MongoDB, Rasa, AWS, Docker",
         "highlights": [
           "Deployed voice-enabled e-commerce platform, improving accessibility engagement by 85%",
           "Integrated AI-powered assistant with Rasa for conversational interactions",
           "Containerized full-stack application for cloud deployment"
         ],
-        "github": "https://github.com/Lakshmipriya0812/Sonic-Touch-AI",
         "demo": "https://youtu.be/Lt-gNI9ZyOI"
       },
       {
@@ -117,7 +116,7 @@
         "demo": ""
       },
       {
-        "name": "Face Mask Detection and Verification System",
+        "name": "Face Mask Detection",
         "technologies": "PyTorch, ResNet50, TensorFlow",
         "highlights": [
           "Prepared and preprocessed dataset for high-quality training",
@@ -138,7 +137,7 @@
         "demo": ""
       },
       {
-        "name": "What Should I Eat? – Dietary Assistance Web Application (Capstone)",
+        "name": "What Should I Eat?",
         "technologies": "HTML, CSS, JavaScript, MongoDB, Node.js, Express.js, Edamam API, Google OAuth, Google Cloud, GoDaddy",
         "highlights": [
           "Developed a full-stack meal recommendation app using the Edamam API, increasing user engagement by 40%",
@@ -150,7 +149,7 @@
         "demo": ""
       },
       {
-        "name": "Car Parking System – Android Reservation App",
+        "name": "Car Parking System",
         "technologies": "Java,Android, MVVM, Google Maps API, PHP",
         "highlights": [
           "Architected native Android app using MVVM architecture for parking reservations, improving modularity by 40%",

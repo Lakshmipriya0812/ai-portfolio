@@ -35,3 +35,6 @@ client/*.local
 
 server/.env
 .env
+
+/server/storage/index.json
+/server/storage
