@@ -146,6 +146,7 @@ export function ExpandableCard({ projects }: ExpandableCardProps) {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.8, opacity: 0, y: 50 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
+
               className="w-full max-w-[800px] max-h-[90vh] overflow-y-auto flex flex-col bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden"
             >
               {/* Header with gradient */}
@@ -274,7 +275,6 @@ export function ExpandableCard({ projects }: ExpandableCardProps) {
                   </motion.div>
                 )}
               </div>
-
                 </div>
               </div>
             </motion.div>
@@ -318,7 +318,6 @@ export function ExpandableCard({ projects }: ExpandableCardProps) {
           >
 
               <div className="flex gap-4 flex-col md:flex-row items-center md:items-start">
-                
                 <div className="flex-1 text-center md:text-left line-clamp-4">
                 <motion.h3
                   layoutId={`title-${project.name || project.title}-${id}`}

@@ -42,7 +42,6 @@ function formatDocumentForDisplay(doc) {
     
       const github = meta.github;
       const demo = meta.demo || meta.demoVideo;
-    
       let description = meta.description;
       if (!description && typeof content === 'string') {
         try {
