@@ -1,4 +1,4 @@
-export function enforceGuardrails(results, { minScore = 0.35 } = {}) {
+export function enforceGuardrails(results, { minScore = 0.25 } = {}) {
   if (!results || results.length === 0) {
     return {
       allowed: false,
@@ -16,18 +16,32 @@ export function enforceGuardrails(results, { minScore = 0.35 } = {}) {
   return { allowed: true };
 }
 
+// ------------------ Compose Answers ------------------
+
 export function composeAnswer(results) {
-  return results
-    .map(({ doc }) => {
-      const formatted = formatDocumentForDisplay(doc);
-      const source = doc.metadata?.section || doc.type || 'info';
-      return `${formatted}\n\n(source: ${source})`;
-    })
-    .join('\n\n---\n\n'); 
+  const sections = {};
+
+  // Group results by type
+  for (const { doc } of results) {
+    const type = doc.type || doc.metadata?.section || 'info';
+    if (!sections[type]) sections[type] = [];
+    sections[type].push(formatDocumentForDisplay(doc));
+  }
+
+  const output = [];
+  for (const [type, docs] of Object.entries(sections)) {
+    const header = type === 'experience' ? 'Experience\n\n' :
+                   type === 'project' ? 'Projects\n\n' : '';
+    output.push(header + docs.join('\n\n---\n\n'));
+  }
+
+  return output.join('\n\n');
 }
 
+// ------------------ Format Document for Display ------------------
+
 function formatDocumentForDisplay(doc) {
-  const type = doc.type || (doc.metadata && doc.metadata.section);
+  const type = doc.type || doc.metadata?.section;
   const meta = doc.metadata || {};
   const title = doc.title || 'Information';
   const content = doc.content || '';
@@ -35,67 +49,38 @@ function formatDocumentForDisplay(doc) {
   switch (type) {
     case 'project': {
       const name = meta.name || meta.title || title;
-      const technologies = Array.isArray(meta.technologies)
-        ? meta.technologies.join(', ')
-        : (typeof meta.technologies === 'string' ? meta.technologies : '');
+      const description = meta.description || parseContentDescription(content);
+      const technologies = formatArray(meta.technologies);
       const highlights = Array.isArray(meta.highlights) ? meta.highlights : [];
-    
       const github = meta.github;
       const demo = meta.demo || meta.demoVideo;
-      let description = meta.description;
-      if (!description && typeof content === 'string') {
-        try {
-          const parsed = JSON.parse(content);
-          if (parsed?.description) {
-            description = parsed.description;
-          }
-        } catch (_) {}
-      }
-    
-      const lines = [];
-    
-      lines.push(`🚀 Project: ${name}`);
+
+      const lines = [`Project: ${name}`];
       if (description) lines.push(description);
-    
-      if (technologies) lines.push(`💻 Technologies: ${technologies}`);
+      if (technologies) lines.push(`Technologies: ${technologies}`);
       if (highlights.length) {
-        lines.push('✨ Highlights:');
-        for (const h of highlights) lines.push(`  • ${h}`);
+        lines.push('Highlights:');
+        lines.push(...highlights.map(h => `  • ${h}`));
       }
-      if (github) lines.push(`🔗 GitHub: ${github}`);
-      if (demo) lines.push(`▶️ Demo: ${demo}`);
-    
-      return lines.filter(Boolean).join('\n');
-    }
-    
-    
+      if (github) lines.push(`GitHub: ${github}`);
+      if (demo) lines.push(`Demo: ${demo}`);
 
-    case 'skill': {
-      const name = meta.name || title;
-      return `🛠 Skill: ${name}`;
+      return lines.join('\n');
     }
 
-    case 'skills': {
-      // Expect either categories of skills or flat skills array in metadata or content
-      if (Array.isArray(meta.categories)) {
-        // If categories exist, flatten skills for display
-        const allSkills = meta.categories.flatMap(cat => cat.skills || []);
-        return `🛠 Skills:\n${allSkills.join(', ')}`;
-      } else {
-        let skillsList = [];
-        if (Array.isArray(meta.skills)) skillsList = meta.skills;
-        else if (typeof doc.content === 'string') {
-          try {
-            const parsed = JSON.parse(doc.content);
-            if (Array.isArray(parsed?.skills)) skillsList = parsed.skills;
-          } catch (_) {
-            skillsList = doc.content.split(/\s*,\s*|\n+/).map(s => s.trim()).filter(Boolean);
-          }
-        }
-        return `🛠 Skills:\n${skillsList.join(', ')}`;
+    case 'experience': {
+      const role = meta.role || title;
+      const company = meta.company || '';
+      const period = meta.period || '';
+      const highlights = Array.isArray(meta.highlights) ? meta.highlights : [];
+
+      const lines = [`Experience: ${role}${company ? ` @ ${company}` : ''}${period ? ` (${period})` : ''}`];
+      if (highlights.length) {
+        lines.push('Highlights:');
+        lines.push(...highlights.map(h => `  • ${h}`));
       }
+      return lines.join('\n');
     }
-    
 
     case 'education': {
       const institution = meta.institution || title;
@@ -105,47 +90,78 @@ function formatDocumentForDisplay(doc) {
       return `🎓 Education: ${institution}${degree}${field}${period}`;
     }
 
-    case 'experience': {
-      const role = meta.role || title;
-      const company = meta.company ? ` @ ${meta.company}` : '';
-      const period = meta.period ? ` (${meta.period})` : '';
-      const highlights = Array.isArray(meta.highlights) ? meta.highlights : [];
-      const lines = [];
-
-      lines.push(`💼 Experience: ${role}${company}${period}`);
-      if (highlights.length) {
-        lines.push('✨ Highlights:');
-        for (const h of highlights) lines.push(`  • ${h}`);
-      }
-
-      return lines.join('\n');
-    }
-
     case 'contact': {
-      const email = meta.email ? `✉️ Email: ${meta.email}` : '';
-      const phone = meta.phone ? `📞 Phone: ${meta.phone}` : '';
-      const linkedin = meta.LinkedIn ? `🔗 LinkedIn: ${meta.LinkedIn}` : '';
-      const github = meta.GitHub ? `🐙 GitHub: ${meta.GitHub}` : '';
-      return ['📬 Contact', email, phone, linkedin, github].filter(Boolean).join('\n');
+      const email = meta.email ? `Email: ${meta.email}` : '';
+      const phone = meta.phone ? `Phone: ${meta.phone}` : '';
+      const linkedin = meta.LinkedIn ? `LinkedIn: ${meta.LinkedIn}` : '';
+      const github = meta.GitHub ? `GitHub: ${meta.GitHub}` : '';
+      return ['Contact', email, phone, linkedin, github].filter(Boolean).join('\n');
     }
 
-    case 'about': {
-      return `ℹ️ ${title}\n${content}`;
+    case 'skill': {
+      const name = meta.name || title;
+      return `Skill: ${name}`;
+    }
+
+    case 'skills': {
+      const skillsList = extractSkills(doc, meta);
+      return `Skills:\n${skillsList.join(', ')}`;
     }
 
     case 'fun': {
       const bullets = content.split(/(?<=[.!?])\s+/).map(b => b.trim()).filter(Boolean);
-      return `🎉 Fun & Hobbies\n${bullets.map(b => `  • ${b}`).join('\n')}`;
+      return `Fun & Hobbies\n${bullets.map(b => `  • ${b}`).join('\n')}`;
     }
 
-    default: {
-      return `${title}\n\n${content}`;
+    case 'about': {
+      return `${title}\n${content}`;
     }
+
+    default:
+      return `${title}\n\n${content}`;
   }
 }
 
+// ------------------ Helpers ------------------
+
+function parseContentDescription(content) {
+  if (!content || typeof content !== 'string') return '';
+  try {
+    const parsed = JSON.parse(content);
+    return parsed?.description || '';
+  } catch (_) {
+    return content;
+  }
+}
+
+function formatArray(arr) {
+  if (!arr) return '';
+  if (Array.isArray(arr)) return arr.join(', ');
+  if (typeof arr === 'string') return arr;
+  return '';
+}
+
+function extractSkills(doc, meta) {
+  if (Array.isArray(meta.categories)) {
+    return meta.categories.flatMap(cat => cat.skills || []);
+  }
+  if (Array.isArray(meta.skills)) return meta.skills;
+
+  if (typeof doc.content === 'string') {
+    try {
+      const parsed = JSON.parse(doc.content);
+      if (Array.isArray(parsed?.skills)) return parsed.skills;
+    } catch (_) {
+      return doc.content.split(/\s*,\s*|\n+/).map(s => s.trim()).filter(Boolean);
+    }
+  }
+  return [];
+}
+
+// ------------------ Structured Format ------------------
+
 export function formatStructured(doc) {
-  const type = doc.type || (doc.metadata && doc.metadata.section) || 'info';
+  const type = doc.type || doc.metadata?.section || 'info';
   const meta = doc.metadata || {};
   const base = { type, title: doc.title || meta.title || '', source: meta.section || type };
   switch (type) {
@@ -154,7 +170,11 @@ export function formatStructured(doc) {
         ...base,
         name: meta.name || base.title || '',
         description: meta.description || '',
-        technologies: Array.isArray(meta.technologies) ? meta.technologies : (typeof meta.technologies === 'string' ? meta.technologies.split(/\s*,\s*/) : []),
+        technologies: Array.isArray(meta.technologies)
+          ? meta.technologies
+          : typeof meta.technologies === 'string'
+            ? meta.technologies.split(/\s*,\s*/)
+            : [],
         highlights: Array.isArray(meta.highlights) ? meta.highlights : [],
         github: meta.github || '',
         demo: meta.demo || meta.demoVideo || ''
@@ -183,31 +203,15 @@ export function formatStructured(doc) {
         linkedin: meta.LinkedIn || '',
         github: meta.GitHub || ''
       };
-    case 'skill': {
-      const name = meta.name || base.title || (typeof doc.content === 'string' ? doc.content : '');
-      return { ...base, name };
-    }
+
+    case 'skill':
+      return { ...base, name: meta.name || base.title || (typeof doc.content === 'string' ? doc.content : '') };
+
     case 'skills': {
-      // Return categories or skills as array
-      if (Array.isArray(meta.categories)) {
-        // Flatten categories to one skills array if needed
-        const skills = meta.categories.flatMap(cat => cat.skills || []);
-        return { ...base, categories: meta.categories, skills };
-      } else {
-        let skills = [];
-        if (Array.isArray(meta.skills)) skills = meta.skills;
-        else if (typeof doc.content === 'string') {
-          try {
-            const parsed = JSON.parse(doc.content);
-            if (Array.isArray(parsed?.skills)) skills = parsed.skills;
-          } catch (_) {
-            skills = doc.content.split(/\s*,\s*|\n+/).map(s => s.trim()).filter(Boolean);
-          }
-        }
-        return { ...base, skills };
-      }
+      const skills = extractSkills(doc, meta);
+      return { ...base, categories: meta.categories || [], skills };
     }
-    
+
     default:
       return { ...base, text: doc.content || '' };
   }
