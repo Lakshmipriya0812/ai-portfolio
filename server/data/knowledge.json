@@ -1,51 +1,62 @@
 {
-    "about": "I am Lakshmipriya RajeshKanna, a software engineer with a Master’s from Drexel University. I specialize in full-stack web development, DevOps, and AI-powered systems. I am experienced in Python, Java, JavaScript, React, Spring Boot, SQL, and cloud platforms like AWS.",
-    
-    "skills": {
-      "title": "Skills & Expertise",
-      "technicalSkills": {
-        "title": "Technical Skills",
-        "categories": [
-          {
-            "title": "Frontend",
-            "skills": ["React", "Next.js", "TailwindCSS", "JavaScript", "CSS", "HTML"]
-          },
-          {
-            "title": "Backend",
-            "skills": ["Python", "Java", "Spring Boot", "Flask", "Node.js", "Express.js", "Docker"]
-          },
-          {
-            "title": "Databases",
-            "skills": ["MySQL", "MongoDB", "PostgreSQL", "Neo4j"]
-          },
-          {
-            "title": "DevOps & CI/CD",
-            "skills": ["Git", "GitHub Actions", "Jenkins", "Terraform", "AWS EC2", "S3"]
-          },
-          {
-            "title": "Testing",
-            "skills": ["JUnit", "Mockito", "Jest", "TDD"]
-          },
-          {
-            "title": "Soft Skills",
-            "skills": ["Communication", "Teamwork", "Problem Solving", "Leadership", "Adaptability"]
-          },
-          {
-            "title": "Design Tools",
-            "skills": ["Figma", "Canva", "Adobe Illustrator", "Sketch"]
-          },
-          {
-            "title": "AI Tools",
-            "skills": ["ChatGPT", "Vercel AI SDK", "TensorFlow", "OpenAI API"]
-          }]
+  "about": {
+    "title": "About Me",
+    "content": "I am Lakshmipriya RajeshKanna, a software engineer with a Master’s from Drexel University. I specialize in full-stack web development, DevOps, and AI-powered systems. I am experienced in Python, Java, JavaScript, React, Spring Boot, SQL, and cloud platforms like AWS."
+  },
+
+  "skills": {
+    "title": "Skills & Expertise",
+    "content": "I have a diverse skill set across frontend, backend, databases, DevOps, testing, design, and AI tools.",
+    "categories": [
+      {
+        "title": "Frontend",
+        "items": ["React", "Next.js", "TailwindCSS", "JavaScript", "CSS", "HTML"]
+      },
+      {
+        "title": "Backend",
+        "items": ["Python", "Java", "Spring Boot", "Flask", "Node.js", "Express.js", "Docker"]
+      },
+      {
+        "title": "Databases",
+        "items": ["MySQL", "MongoDB", "PostgreSQL", "Neo4j"]
+      },
+      {
+        "title": "DevOps & CI/CD",
+        "items": ["Git", "GitHub Actions", "Jenkins", "Terraform", "AWS EC2", "S3"]
+      },
+      {
+        "title": "Testing",
+        "items": ["JUnit", "Mockito", "Jest", "TDD"]
+      },
+      {
+        "title": "Soft Skills",
+        "items": ["Communication", "Teamwork", "Problem Solving", "Leadership", "Adaptability"]
+      },
+      {
+        "title": "Design Tools",
+        "items": ["Figma", "Canva", "Adobe Illustrator", "Sketch"]
+      },
+      {
+        "title": "AI Tools",
+        "items": ["ChatGPT", "Vercel AI SDK", "TensorFlow", "OpenAI API"]
       }
-    },
-    
-    "education": "Master of Science in Software Engineering, Drexel University, Philadelphia, PA (GPA: 3.72); Bachelor of Technology in Information Technology, Sona College of Technology, Salem, India (GPA: 3.8)",
-    
-    "fun": "I love baking, especially cakes and cupcakes. Experimenting with new flavors and decorating treats is one of my favorite hobbies.",    
-      
-    "experience": [
+    ]
+  },
+
+  "education": {
+    "title": "Education",
+    "content": "I hold a Master of Science in Software Engineering from Drexel University (GPA: 3.72) and a Bachelor of Technology in Information Technology from Sona College of Technology, India (GPA: 3.8)."
+  },
+
+  "fun": {
+    "title": "Fun & Hobbies",
+    "content": "I love baking, especially cakes and cupcakes. Experimenting with new flavors and decorating treats is one of my favorite hobbies."
+  },
+
+  "experience": {
+    "title": "Professional Experience",
+    "content": "I have experience working across DevOps, software engineering, and full-stack development, contributing to both startups and established companies.",
+    "positions": [
       {
         "role": "DevOps Intern",
         "company": "Epilogue Systems",
@@ -79,12 +90,16 @@
           "Implemented JWT authentication and IAM control"
         ]
       }
-    ],
-    
-    "projects": [
+    ]
+  },
+
+  "projects": {
+    "title": "Projects",
+    "content": "I have worked on a range of projects spanning AI-powered e-commerce, game engines, blockchain tokens, mobile apps, and machine learning models.",
+    "items": [
       {
         "name": "Sonic Touch – AI Powered E-commerce",
-        "technologies": "React, Node.js, Tailwind, MongoDB, Rasa, AWS, Docker",
+        "technologies": ["React", "Node.js", "Tailwind", "MongoDB", "Rasa", "AWS", "Docker"],
         "highlights": [
           "Deployed voice-enabled e-commerce platform, improving accessibility engagement by 85%",
           "Integrated AI-powered assistant with Rasa for conversational interactions",
@@ -94,79 +109,74 @@
       },
       {
         "name": "Dungeon Crawler Game Engine",
-        "technologies": "Java, GitLab CI/CD, Design Patterns, TDD, XP, Automation Testing",
+        "technologies": ["Java", "GitLab CI/CD", "Design Patterns", "TDD", "XP", "Automation Testing"],
         "highlights": [
           "Designed Java-based game with GUI, player movement, enemies, and power-ups",
           "Applied TDD and XP practices achieving 95%+ unit test coverage",
           "Automated CI/CD pipelines with GitLab ensuring reliable deployments"
         ],
-        "github": "https://github.com/Lakshmipriya0812/Dungeon-Crawler",
-        "demo": ""
+        "github": "https://github.com/Lakshmipriya0812/Dungeon-Crawler"
       },
       {
         "name": "Chess Board Move Validation",
-        "technologies": "Java, Jira, TDD, Sprint Planning, Automation Testing",
+        "technologies": ["Java", "Jira", "TDD", "Sprint Planning", "Automation Testing"],
         "highlights": [
           "Created a college project validating chess moves within a 10-day deadline",
-          "Used Jira for task management, created a project charter, and prioritized essential project features, reducing bug occurrence by 20% through rigorous quality assurance practices (TDD)",
-          "Implemented sprint planning methodologies to manage tasks and meet deadlines",
-          "Conducted software testing protocols, achieving a 94% accuracy rate, ensuring robust performance"
+          "Reduced bug occurrence by 20% through rigorous quality assurance practices (TDD)",
+          "Achieved 94% accuracy rate through robust software testing protocols"
         ],
-        "github": "https://github.com/Lakshmipriya0812/Chess-Board-Move-Validation",
-        "demo": ""
+        "github": "https://github.com/Lakshmipriya0812/Chess-Board-Move-Validation"
       },
       {
         "name": "Face Mask Detection",
-        "technologies": "PyTorch, ResNet50, TensorFlow",
+        "technologies": ["PyTorch", "ResNet50", "TensorFlow"],
         "highlights": [
           "Prepared and preprocessed dataset for high-quality training",
           "Trained ResNet50 for mask detection and performed face verification using cosine similarity"
         ],
-        "github": "https://github.com/Lakshmipriya0812/Face-Mask-Deduction",
-        "demo": ""
+        "github": "https://github.com/Lakshmipriya0812/Face-Mask-Deduction"
       },
       {
         "name": "Ethereum Token Development",
-        "technologies": "JavaScript, Solidity, Smart Contracts, MetaMask, ERC-20",
+        "technologies": ["JavaScript", "Solidity", "Smart Contracts", "MetaMask", "ERC-20"],
         "highlights": [
           "Created custom ERC-20 token reducing gas fees by 40%",
           "Integrated MetaMask for seamless user transactions with 99% success rate",
-          "Coordinated tasks with Kanban for weekly sprints, task execution, and independent workflow management"
+          "Managed weekly sprints using Kanban for independent workflow execution"
         ],
-        "github": "https://github.com/Lakshmipriya0812/Token-using-Etherum-on-blockchain",
-        "demo": ""
+        "github": "https://github.com/Lakshmipriya0812/Token-using-Etherum-on-blockchain"
       },
       {
         "name": "What Should I Eat?",
-        "technologies": "HTML, CSS, JavaScript, MongoDB, Node.js, Express.js, Edamam API, Google OAuth, Google Cloud, GoDaddy",
+        "technologies": ["HTML", "CSS", "JavaScript", "MongoDB", "Node.js", "Express.js", "Edamam API", "Google OAuth", "Google Cloud", "GoDaddy"],
         "highlights": [
           "Developed a full-stack meal recommendation app using the Edamam API, increasing user engagement by 40%",
           "Implemented secure login with Google OAuth and OTP verification, raising adoption rate by 25%",
-          "Optimized backend performance with caching, load balancing, and scheduled Cron jobs, reducing response time by 30%",
-          "Deployed frontend/backend via GoDaddy hosting and Google Cloud, ensuring high availability and global accessibility"
+          "Optimized backend performance with caching and load balancing, reducing response time by 30%"
         ],
-        "github": "https://github.com/Lakshmipriya0812/What-Should-I-Eat",
-        "demo": ""
+        "github": "https://github.com/Lakshmipriya0812/What-Should-I-Eat"
       },
       {
         "name": "Car Parking System",
-        "technologies": "Java,Android, MVVM, Google Maps API, PHP",
+        "technologies": ["Java", "Android", "MVVM", "Google Maps API", "PHP"],
         "highlights": [
-          "Architected native Android app using MVVM architecture for parking reservations, improving modularity by 40%",
-          "Connected Google Maps API for real-time location views, increasing user interaction by 60%",
-          "Created PHP backend for live booking and slot management, enhancing reliability by 35%",
-          "Implemented real-time updates and payment confirmation, reducing search times by 50%"
+          "Built native Android app with MVVM architecture for parking reservations, improving modularity by 40%",
+          "Integrated Google Maps API for real-time location views, boosting user interaction by 60%",
+          "Implemented live booking and slot management backend in PHP, enhancing reliability by 35%"
         ],
-        "github": "https://github.com/Lakshmipriya0812/Car-Parking-Application",
-        "demo": ""
-      }    
-    ],
-    
-    "contact": {
+        "github": "https://github.com/Lakshmipriya0812/Car-Parking-Application"
+      }
+    ]
+  },
+
+  "contact": {
+    "title": "Contact",
+    "content": "You can reach me directly via email or phone, and explore my work on LinkedIn and GitHub.",
+    "details": {
       "email": "rs.lakshmipriya08@gmail.com",
       "phone": "267-261-2987",
       "LinkedIn": "https://www.linkedin.com/in/lakshmipriya08",
-      "GitHub": "https://github.com/lakshmipriya08"
+      "GitHub": "https://github.com/lakshmipriya0812"
     }
   }
-  
+}
