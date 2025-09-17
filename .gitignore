@@ -36,5 +36,8 @@ client/*.local
 server/.env
 .env
 
-/server/storage/index.json
 /server/storage
+
+#ollama-models
+/server/ollama_data
+/server/ollama_data/models
