@@ -2,7 +2,6 @@ import fs from "fs";
 import path from "path";
 import { generateText } from "../lib/generation.js";
 
-
 const indexPath = path.join(process.cwd(), "storage", "indexStore.json");
 const index = JSON.parse(fs.readFileSync(indexPath, "utf-8"));
 
@@ -19,11 +18,10 @@ export async function getSection(req, res) {
   const { section } = req.params;
   const myName = "Lakshmipriya";
 
-
   try {
     switch (section) {
       case "about": {
-        const doc = index.documents.find(d => d.metadata.section === "about");
+        const doc = index.documents.find((d) => d.metadata.section === "about");
         const prompt = `Write a 4-5 line friendly, enthusiastic introduction using this content: ${doc.content}.
         Start the text with: "Hello, I'm ${myName}."
         Add greeting and emoji.`;
@@ -31,16 +29,18 @@ export async function getSection(req, res) {
         const aiTextRaw = await generateText(prompt);
         const aiText = cleanAIResponse(aiTextRaw);
 
-        return res.json({ structured: doc, aiText });
+        return res.json({ structured: { ...doc, type: "about" }, aiText });
       }
 
       case "fun": {
-        const doc = index.documents.find(d => d.metadata.section === "fun");
+        const doc = index.documents.find((d) => d.metadata.section === "fun");
+
         const prompt = `Write a 4-5 line friendly, enthusiastic text using this content: "${doc.content}".
         Start the text with: "Hello, I'm ${myName}."
         Do not change the name.
-        Add emojis where appropriate.`;
-        
+        Add emojis where appropriate.
+        Include a real fun fact or a playful quote about baking, cakes, or desserts to make it more lively and engaging.`;
+
         const aiTextRaw = await generateText(prompt);
         const aiText = cleanAIResponse(aiTextRaw);
 
@@ -48,7 +48,9 @@ export async function getSection(req, res) {
       }
 
       case "projects": {
-        const docs = index.documents.filter(d => d.metadata.section === section);
+        const docs = index.documents.filter(
+          (d) => d.metadata.section === section
+        );
         const highlighted = docs.slice(0, 3);
         const projectsInfo = highlighted
           .map(
@@ -72,18 +74,36 @@ export async function getSection(req, res) {
       - End with a friendly closing line inviting engagement, e.g., "Got a project you wanna dive into? 😄"
       - Keep it concise, fun, and professional.
       `;
-      
+
         const aiTextRaw = await generateText(prompt);
         const aiText = cleanAIResponse(aiTextRaw);
-      
-        return res.json({ structured: docs, aiText });
+        const projectsData = {
+          type: "projects",
+          items: docs.map((doc) => ({
+            name: doc.metadata.name,
+            title: doc.metadata.name,
+            description: doc.metadata.description || "",
+            technologies: doc.metadata.technologies || [],
+            tech: doc.metadata.technologies || [],
+            highlights: doc.metadata.highlights || [],
+            link: doc.metadata.link || "",
+            github: doc.metadata.github || "",
+            demo: doc.metadata.demo || "",
+          })),
+        };
+
+        return res.json({ structured: projectsData, aiText });
       }
-      
 
       case "skills": {
-        const docs = index.documents.filter(d => d.metadata.section === section);
+        const docs = index.documents.filter(
+          (d) => d.metadata.section === section
+        );
         const skillListing = docs
-          .map(d => `**${d.metadata.category}**\n- ${d.metadata.items.join("\n- ")}`)
+          .map(
+            (d) =>
+              `**${d.metadata.category}**\n- ${d.metadata.items.join("\n- ")}`
+          )
           .join("\n\n");
         const prompt = `
       You are a professional portfolio assistant. Using ONLY the following skill categories and items, 
@@ -97,50 +117,73 @@ export async function getSection(req, res) {
       - Keep it friendly, approachable, and concise
       - Use emojis appropriately
       `;
-      
+
         const aiTextRaw = await generateText(prompt);
         const aiText = cleanAIResponse(aiTextRaw);
-      
-        return res.json({ structured: docs, aiText });
+
+        const skillsData = {
+          type: "skills",
+          title: "Skills & Expertise",
+          categories: docs.map((doc) => ({
+            title: doc.metadata.category,
+            skills: doc.metadata.items || [],
+          })),
+        };
+
+        return res.json({ structured: skillsData, aiText });
       }
-             
+
       case "experience": {
         const docs = index.documents
-          .filter(d => d.metadata.section === section)
+          .filter((d) => d.metadata.section === section)
           .sort((a, b) => {
-            const getStartDate = p => new Date(p.split(" - ")[0]);
-            return getStartDate(b.metadata.period) - getStartDate(a.metadata.period);
+            const getStartDate = (p) => new Date(p.split(" - ")[0]);
+            return (
+              getStartDate(b.metadata.period) - getStartDate(a.metadata.period)
+            );
           });
-        const experiencesInfo = docs
-          .map(
-            d => `Role: ${d.metadata.role}; Company: ${d.metadata.company}; Highlights: ${d.metadata.highlights.join(
-              "; "
-            )}`
-          )
-          .join("\n");
-        const prompt = `
-      You are a professional portfolio assistant. Using ONLY the following experience information, 
-      write a friendly, use short bullet points reflecting on my learning, growth, skills, 
-      and excitement for future challenges.
-      
-      ${experiencesInfo}
-      
-      Requirements:
-      - Write in first-person (“I”, “my”) from my perspective
-      - Do NOT refer to "you" or "your journey"
-      - Include emojis where appropriate
-      - Keep it concise, professional, and growth-oriented
-      - Mention enthusiasm for full-time opportunities`;
-      
-        const aiTextRaw = await generateText(prompt);
-        const aiText = cleanAIResponse(aiTextRaw);
-      
-        return res.json({ structured: docs, aiText });
+
+        const aiSummaries = await Promise.all(
+          docs.map(async (doc) => {
+            const prompt = `
+              You are a professional portfolio assistant.
+              Using the following highlights, write 4-5 concise, friendly bullet points describing my work and contributions. 
+              Do NOT repeat the role, company, or period — those are already displayed.
+
+              Highlights:
+              ${doc.metadata.highlights.map((h) => `- ${h}`).join("\n")}
+
+              Requirements:
+              - 4-5 bullets max
+              - Keep each bullet 1-2 sentences
+              - Write in first-person ("I", "my") from my perspective
+              - Include emojis where appropriate
+              - Focus on skills, learning, growth, and impact
+              `;
+            const raw = await generateText(prompt);
+            return cleanAIResponse(raw);
+          })
+        );
+
+        const experienceData = {
+          type: "experience",
+          title: "💼 Professional Experience",
+          items: docs.map((doc, idx) => ({
+            role: doc.metadata.role,
+            company: doc.metadata.company,
+            period: doc.metadata.period,
+            highlights: [],
+            aiText: aiSummaries[idx],
+          })),
+        };
+
+        return res.json({ structured: experienceData });
       }
-      
 
       case "contact": {
-        const doc = index.documents.find(d => d.metadata.section === "contact");
+        const doc = index.documents.find(
+          (d) => d.metadata.section === "contact"
+        );
         return res.json({ structured: doc });
       }
 
