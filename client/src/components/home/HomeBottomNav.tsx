@@ -1,23 +1,10 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { User, Briefcase, Star, Layers, Sparkles, MessageCircle } from 'lucide-react';
-import { QUICK_ACTIONS } from '../../constants/home';
-import { HomeBottomNavProps, QuickAction } from '../../types/home';
+import React from "react";
+import { motion } from "framer-motion";
+import QuickActions from "../../components/QuickActions";
+import { QUICK_ACTIONS } from "../../constants/home";
+import { HomeBottomNavProps } from "../../types/home";
 
-const iconMap = {
-  user: User,
-  briefcase: Briefcase,
-  star: Star,
-  layers: Layers,
-  sparkles: Sparkles,
-  'message-circle': MessageCircle,
-} as const;
-
-const HomeBottomNav: React.FC<HomeBottomNavProps> = ({
-  showBottomNav,
-  isModalOpen,
-  onActionClick
-}) => {
+const HomeBottomNav: React.FC<HomeBottomNavProps> = ({ onActionClick }) => {
   return (
     <motion.div
       initial={{ y: 100, opacity: 0 }}
@@ -25,27 +12,21 @@ const HomeBottomNav: React.FC<HomeBottomNavProps> = ({
       exit={{ y: 100, opacity: 0 }}
       transition={{ duration: 0.8, ease: "easeOut" }}
       className="home-bottom-nav"
+      style={{
+        position: "static",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 25,
+        marginTop: 16,
+      }}
     >
-      <div className="bottom-nav-content">
-        <div className="bottom-nav-grid">
-          {QUICK_ACTIONS.map((action: QuickAction, index: number) => {
-            const IconComponent = iconMap[action.icon as keyof typeof iconMap];
-            return (
-              <motion.button
-                key={action.label}
-                onClick={() => onActionClick(action.question)}
-                className="bottom-nav-button"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 + index * 0.1, duration: 0.5 }}
-              >
-                <IconComponent className="bottom-nav-icon" />
-                <span className="bottom-nav-label">{action.label}</span>
-              </motion.button>
-            );
-          })}
+      <div className="bottom-nav-content" style={{ padding: "24px 32px 32px" }}>
+        <div style={{ maxWidth: "32rem", margin: "0 auto" }}>
+          <QuickActions
+            actions={QUICK_ACTIONS as any}
+            onActionClick={onActionClick}
+          />
         </div>
       </div>
     </motion.div>
