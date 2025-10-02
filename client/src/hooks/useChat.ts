@@ -36,6 +36,8 @@ export const useChat = (initialQuery?: string) => {
 
     try {
       const resData = await apiService.sendChatMessage(question);
+      console.log('useChat - API Response:', resData);
+      
       const aiText = resData.aiText;
       const structured = resData.structured;
 
@@ -57,7 +59,6 @@ export const useChat = (initialQuery?: string) => {
     }
   }, [inputValue]);
 
-  // Auto-send initial query when component mounts
   useEffect(() => {
     if (initialQuery && initialQuery.trim()) {
       setInputValue(initialQuery);
