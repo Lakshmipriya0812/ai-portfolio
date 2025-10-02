@@ -18,6 +18,17 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({ showHeader, onModalStateChange 
       exit={{ y: -100, opacity: 0 }}
       transition={{ duration: 0.8, ease: "easeOut" }}
       className="home-header"
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 30,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: 24
+      }}
     >
       {/* Apple Carousel */}
       <motion.div {...scaleFadeIn(0.3)}>

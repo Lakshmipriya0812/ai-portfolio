@@ -21,7 +21,7 @@ export interface HomeBottomNavProps {
 }
 
 export interface QuickAction {
-  icon: React.ReactNode;
+  icon: string | React.ReactNode;
   label: string;
   question: string;
 }

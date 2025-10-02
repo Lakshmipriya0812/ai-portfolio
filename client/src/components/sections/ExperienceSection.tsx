@@ -6,6 +6,7 @@ interface ExperienceItem {
   company?: string;
   period?: string;
   highlights?: string[];
+  aiText?: string;
 }
 
 interface ExperienceSectionProps {
@@ -13,16 +14,17 @@ interface ExperienceSectionProps {
     title?: string;
     items: ExperienceItem[];
   };
+  aiText?: string;
 }
 
 const ExperienceSection: React.FC<ExperienceSectionProps> = ({ structured }) => {
   const items: ExperienceItem[] = structured?.items || [];
-
   if (!items.length) return null;
-
   return (
-    <div className="text-left space-y-4">
-      <ExperienceTestimonial experiences={items} autoplay />
+    <div className="experience-section w-full">
+      <div className="text-left space-y-4 mb-8">
+        <ExperienceTestimonial experiences={items} />
+      </div>
     </div>
   );
 };
