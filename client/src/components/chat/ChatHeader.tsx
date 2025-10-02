@@ -23,7 +23,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onBackToHome }) => {
         {/* Back Button */}
         <motion.button
           onClick={onBackToHome}
-          className="back-button"
           style={{
             display: "flex",
             alignItems: "center",
@@ -37,11 +36,11 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onBackToHome }) => {
             transition: "all 0.2s ease",
           }}
           whileHover={{ scale: 1.05, borderColor: "#6b7280", color: "#111827" }}
+
           whileTap={{ scale: 0.95 }}
         >
           <ArrowLeft size={20} />
         </motion.button>
-
         {/* Right Side */}
         <div className="flex items-center gap-4">
           <HeaderWidget />
