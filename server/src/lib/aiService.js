@@ -55,9 +55,12 @@ class AIService {
     }
 
     this.activeProvider = provider;
-    console.log(
-      `✅ AI Provider: ${providerName} (${AI_CONFIG.providers[providerName].model})`
-    );
+
+    if (process.env.NODE_ENV === "development") {
+      console.log(
+        `AI Provider: ${providerName} (${AI_CONFIG.providers[providerName].model})`
+      );
+    }
   }
 
   /**
@@ -68,8 +71,8 @@ class AIService {
       const provider = this.providers[fallbackName];
       if (provider && provider.isAvailable()) {
         this.activeProvider = provider;
-        console.log(
-          `✅ Fallback AI Provider: ${fallbackName} (${AI_CONFIG.providers[fallbackName].model})`
+        console.warn(
+          `Using fallback AI Provider: ${fallbackName} (${AI_CONFIG.providers[fallbackName].model})`
         );
         return;
       }
@@ -88,18 +91,21 @@ class AIService {
     }
 
     try {
-      console.log(`🤖 Generating with ${this.activeProvider.getName()}...`);
       const startTime = Date.now();
-
       const response = await this.activeProvider.generate(prompt);
-
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-      console.log(`✅ Generated in ${duration}s`);
+
+      // Only log in development
+      if (process.env.NODE_ENV === "development") {
+        console.log(
+          `✅ AI generated in ${duration}s with ${this.activeProvider.getName()}`
+        );
+      }
 
       return response;
     } catch (error) {
       console.error(
-        `❌ ${this.activeProvider.getName()} failed:`,
+        `AI Provider ${this.activeProvider.getName()} failed:`,
         error.message
       );
 
@@ -110,13 +116,12 @@ class AIService {
         const fallbackProvider = this.providers[fallbackName];
         if (fallbackProvider && fallbackProvider.isAvailable()) {
           try {
-            console.log(`🔄 Trying fallback: ${fallbackName}`);
             const response = await fallbackProvider.generate(prompt);
-            console.log(`✅ Fallback ${fallbackName} succeeded`);
+            console.warn(`Using fallback provider: ${fallbackName}`);
             return response;
           } catch (fallbackError) {
             console.error(
-              `❌ Fallback ${fallbackName} failed:`,
+              `Fallback ${fallbackName} failed:`,
               fallbackError.message
             );
             continue;
@@ -159,9 +164,12 @@ class AIService {
     }
 
     this.activeProvider = provider;
-    console.log(
-      `🔄 Switched to: ${providerName} (${AI_CONFIG.providers[providerName].model})`
-    );
+
+    if (process.env.NODE_ENV === "development") {
+      console.log(
+        `Switched AI provider to: ${providerName} (${AI_CONFIG.providers[providerName].model})`
+      );
+    }
   }
 }
 

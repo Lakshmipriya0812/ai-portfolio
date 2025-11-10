@@ -12,7 +12,10 @@ const index = JSON.parse(fs.readFileSync(indexPath, "utf-8"));
 
 // Clear cache on startup to ensure fresh responses
 clearCache();
-console.log("Cache cleared on startup");
+
+if (process.env.NODE_ENV === "development") {
+  console.log("Cache cleared on startup");
+}
 
 // ---------------- Helper function ----------------
 function cleanAIResponse(aiResponse) {
@@ -24,54 +27,35 @@ function cleanAIResponse(aiResponse) {
 
 // Fast AI generation with caching
 async function getAIResponse(section, prompt, forceGenerate = false) {
-  // Temporary bypass for testing - remove when AI is working
-  const BYPASS_AI = false; // Set to false when models are working properly
-
-  console.log(
-    `getAIResponse called with section: ${section}, bypass: ${BYPASS_AI}`
-  );
-
-  if (BYPASS_AI) {
-    const quickResponses = {
-      about:
-        "Hello, I'm Lakshmipriya! 👋 I'm a passionate software engineer with an MS from Drexel University. I specialize in full-stack development, DevOps, and AI-powered systems. Always excited to build innovative solutions! 🚀",
-      skills:
-        "I bring a diverse tech toolkit to the table! 💻 From React and Python to AWS and AI tools, I love working across the full stack. I'm passionate about clean code, DevOps practices, and continuous learning! ✨",
-      projects:
-        "I've got some exciting projects under my belt! 🎉 From AI-powered e-commerce platforms to game engines and blockchain tokens. Each project taught me something new and pushed my technical boundaries! 🚀",
-      experience:
-        "My journey has taken me through DevOps at Epilogue Systems, software engineering at Techavidity, and full-stack development at Intellint Technology. Each role has been a fantastic learning experience! 💼",
-      fun: "When I'm not coding, I'm totally obsessed with baking! 🧁 I love creating everything from rainbow cakes to decadent brownies. Baking is my creative outlet where I mix flavors, textures, and colors! 🎂✨",
-    };
-    const response =
-      quickResponses[section] ||
-      "Thanks for your question! I'm excited to share more about my journey in tech! 😊";
-    console.log(
-      `Returning bypass response for ${section}: ${response.substring(
-        0,
-        50
-      )}...`
-    );
-    return response;
-  }
-
   // Check cache first
   const cacheKey = `${section}_${prompt.slice(0, 100)}`;
   const cached = getCachedResponse(cacheKey);
-  if (cached && !forceGenerate) return cached;
+  if (cached && !forceGenerate) {
+    if (process.env.NODE_ENV === "development") {
+      console.log(`Cache hit for section: ${section}`);
+    }
+    return cached;
+  }
 
   // Generate new response
-  console.log(
-    `Calling generateText with prompt: ${prompt.substring(0, 100)}...`
-  );
-  const aiTextRaw = await generateText(prompt);
-  console.log(`Raw AI response: "${aiTextRaw}"`);
-  const aiText = cleanAIResponse(aiTextRaw);
-  console.log(`Cleaned AI response: "${aiText}"`);
+  try {
+    const aiTextRaw = await generateText(prompt);
+    const aiText = cleanAIResponse(aiTextRaw);
 
-  // Cache the response
-  setCachedResponse(cacheKey, aiText);
-  return aiText;
+    if (!aiText || aiText.trim().length === 0) {
+      throw new Error("AI generated empty response");
+    }
+
+    // Cache the response
+    setCachedResponse(cacheKey, aiText);
+    return aiText;
+  } catch (error) {
+    console.error(
+      `Failed to generate AI response for ${section}:`,
+      error.message
+    );
+    throw error;
+  }
 } // ---------------- Controller ----------------
 export async function getSection(req, res) {
   const { section } = req.params;
@@ -268,7 +252,10 @@ Requirements:
         return res.status(404).json({ error: "Section not found" });
     }
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Internal server error" });
+    console.error(`Error in getSection for ${section}:`, err.message);
+    res.status(500).json({
+      error: "Failed to retrieve section data",
+      details: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
   }
 }

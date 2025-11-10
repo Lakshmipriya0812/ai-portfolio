@@ -8,6 +8,8 @@ export const useChat = (initialQuery?: string) => {
     useState<ChatInteraction | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isRateLimited, setIsRateLimited] = useState(false);
+  const [rateLimitMessage, setRateLimitMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
@@ -20,6 +22,12 @@ export const useChat = (initialQuery?: string) => {
 
   const handleSendMessage = useCallback(
     async (message?: string) => {
+
+      // Block if rate limited
+      if (isRateLimited) {
+        return;
+      }
+
       const question = message ?? inputValue;
       if (!question.trim()) return;
 
@@ -38,7 +46,6 @@ export const useChat = (initialQuery?: string) => {
 
       try {
         const resData = await apiService.sendChatMessage(question);
-        console.log("useChat - API Response:", resData);
 
         const aiText = resData.aiText;
         const structured = resData.structured;
@@ -50,9 +57,22 @@ export const useChat = (initialQuery?: string) => {
           isLoading: false,
         });
       } catch (err: any) {
+        const errorMessage =
+          err?.message || "Something went wrong. Please try again.";
+
+        // Check if rate limited (429 error)
+        if (
+          errorMessage.includes("explored quite a bit") ||
+          errorMessage.includes("rate limit")
+        ) {
+          setIsRateLimited(true);
+          setRateLimitMessage(errorMessage);
+        }
+
         setCurrentInteraction({
           ...newInteraction,
-          response: err?.message || "Something went wrong. Please try again.",
+          response: errorMessage,
+
           structured: undefined,
           isLoading: false,
         });
@@ -60,7 +80,7 @@ export const useChat = (initialQuery?: string) => {
         setIsLoading(false);
       }
     },
-    [inputValue]
+    [inputValue, isRateLimited]
   );
 
   // Handle initial query only once
@@ -101,6 +121,8 @@ export const useChat = (initialQuery?: string) => {
     inputValue,
     setInputValue,
     isLoading,
+    isRateLimited,
+    rateLimitMessage,
     messagesEndRef,
     handleSendMessage,
     handleQuickQuestion,
