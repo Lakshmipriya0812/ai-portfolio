@@ -13,6 +13,7 @@
  */
 
 import { generateText as generate } from "./aiService.js";
+import { trackAPICall } from "./usageTracker.js";
 
 /**
  * Generate text using configured AI provider
@@ -21,6 +22,7 @@ import { generateText as generate } from "./aiService.js";
  */
 export async function generateText(prompt) {
   try {
+    trackAPICall(); // Track API usage
     const response = await generate(prompt);
     return response || "";
   } catch (error) {

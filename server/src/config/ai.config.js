@@ -1,4 +1,3 @@
-// Load environment variables
 import dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
@@ -8,16 +7,6 @@ const __dirname = dirname(__filename);
 dotenv.config({ path: join(__dirname, "../../.env") });
 
 // AI Configuration - Change provider and model here
-
-// Debug: Log environment variables when config is loaded
-console.log("🔧 Loading AI Config...");
-console.log("AI_PROVIDER:", process.env.AI_PROVIDER);
-console.log(
-  "GEMINI_API_KEY:",
-  process.env.GEMINI_API_KEY
-    ? `Set (${process.env.GEMINI_API_KEY.substring(0, 10)}...)`
-    : "NOT SET"
-);
 
 export const AI_CONFIG = {
   // Active provider: 'ollama' | 'openai' | 'huggingface' | 'gemini' | 'anthropic'

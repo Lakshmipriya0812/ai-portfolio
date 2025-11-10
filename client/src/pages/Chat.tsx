@@ -5,6 +5,7 @@ import ResponseRenderer from "../components/chat/ResponseRenderer";
 import ChatInput from "../components/chat/ChatInput";
 import QuickQuestionButtons from "../components/QuickActions";
 import HowToUseModal from "../components/HowToUseCardCarousal";
+import RateLimitModal from "../components/chat/RateLimitModal";
 import { useChat } from "../hooks/useChat";
 import { ChatProps } from "../types/chat";
 import { CHAT_ANIMATIONS } from "../constants/chat";
@@ -18,6 +19,8 @@ const Chat: React.FC<ChatProps> = ({ onBackToHome, initialQuery }) => {
     inputValue,
     setInputValue,
     isLoading,
+    isRateLimited,
+    rateLimitMessage,
     messagesEndRef,
     handleSendMessage,
     handleQuickQuestion,
@@ -127,6 +130,7 @@ const Chat: React.FC<ChatProps> = ({ onBackToHome, initialQuery }) => {
                 onSendMessage={handleSendMessage}
                 onKeyPress={handleKeyPress}
                 isLoading={isLoading}
+                disabled={isRateLimited}
               />
             </div>
           </div>
@@ -140,6 +144,10 @@ const Chat: React.FC<ChatProps> = ({ onBackToHome, initialQuery }) => {
               }
             />
           )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {isRateLimited && <RateLimitModal message={rateLimitMessage} />}
         </AnimatePresence>
 
         <div ref={messagesEndRef} />
