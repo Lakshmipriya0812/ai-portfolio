@@ -86,16 +86,20 @@ export async function chatHandler(req, res) {
     const keywordSection = detectKeywordBias(message);
     if (keywordSection) {
       bestDoc.section = keywordSection;
-      console.log(`Keyword detected: ${keywordSection}`);
+      if (process.env.NODE_ENV === "development") {
+        console.log(`Keyword detected: ${keywordSection}`);
+      }
     } else {
       const margin = bestDoc.score - secondBest.score;
       if (margin < 0.02) {
         bestDoc.section = "about";
-        console.log(`Low confidence, defaulting to about`);
+        if (process.env.NODE_ENV === "development") {
+          console.log(
+            `Low confidence (margin: ${margin.toFixed(4)}), defaulting to about`
+          );
+        }
       }
     }
-
-    console.log(`Final section selected: ${bestDoc.section}`);
 
     if (!bestDoc)
       return res.status(404).json({ error: "No matching section found" });
@@ -103,7 +107,6 @@ export async function chatHandler(req, res) {
     const fakeReq = { params: { section: bestDoc.section } };
     const fakeRes = {
       json: (data) => {
-        console.log(`Chat controller returning section: ${bestDoc.section}`);
         res.json({ section: bestDoc.section, ...data });
       },
       status: (code) => ({ json: (data) => res.status(code).json(data) }),
@@ -111,7 +114,10 @@ export async function chatHandler(req, res) {
 
     await getSection(fakeReq, fakeRes);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Internal server error" });
+    console.error(`Chat handler error:`, err.message);
+    res.status(500).json({
+      error: "Failed to process chat message",
+      details: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
   }
 }

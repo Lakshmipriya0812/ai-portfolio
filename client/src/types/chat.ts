@@ -9,7 +9,7 @@ export interface ChatInteraction {
 
 export interface ChatProps {
   onBackToHome: () => void;
-  theme: 'light' | 'dark';
+  theme: "light" | "dark";
   onThemeToggle: () => void;
   initialQuery?: string;
 }
@@ -20,6 +20,7 @@ export interface ChatInputProps {
   onSendMessage: () => void;
   onKeyPress: (e: React.KeyboardEvent) => void;
   isLoading: boolean;
+  disabled?: boolean;
 }
 
 export interface ResponseRendererProps {
