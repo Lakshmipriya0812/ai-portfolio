@@ -2,12 +2,12 @@ export const QUICK_ACTIONS = [
   {
     icon: "user",
     label: "Me",
-    question: "Who are you and what's your background?",
+    question: "Tell me about yourself",
   },
   {
     icon: "briefcase",
     label: "Projects",
-    question: "What projects have you worked on recently?",
+    question: "What projects have you worked on?",
   },
   {
     icon: "star",
@@ -17,7 +17,7 @@ export const QUICK_ACTIONS = [
   {
     icon: "layers",
     label: "Experience",
-    question: "What's your work experience and career journey?",
+    question: "What's your work experience?",
   },
   {
     icon: "sparkles",
