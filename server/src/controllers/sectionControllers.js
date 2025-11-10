@@ -61,9 +61,12 @@ export async function getSection(req, res) {
   const { section } = req.params;
   const myName = "Lakshmipriya";
 
+  console.log(`getSection called with section: ${section}`);
+
   try {
     switch (section) {
       case "about": {
+        console.log("Processing about section");
         const doc = index.documents.find((d) => d.metadata.section === "about");
         const prompt = `Write a friendly, enthusiastic 4-5 line introduction using this content: "${doc.content}". 
 
