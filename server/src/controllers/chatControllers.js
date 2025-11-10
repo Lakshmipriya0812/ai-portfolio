@@ -6,7 +6,7 @@ import { getSection } from "./sectionControllers.js";
 // Load full index (documents + vectors)
 const indexPath = path.join(process.cwd(), "storage", "indexStore.json");
 const indexData = JSON.parse(fs.readFileSync(indexPath, "utf-8"));
-const vectorsMap = new Map(indexData.vectors.map(v => [v.id, v.embedding]));
+const vectorsMap = new Map(indexData.vectors.map((v) => [v.id, v.embedding]));
 
 // ---------------- Helper: cosine similarity ----------------
 function cosineSim(vecA, vecB) {
@@ -18,18 +18,39 @@ function cosineSim(vecA, vecB) {
 
 // ---------------- Keyword Bias Rules ----------------
 const keywordBias = {
-  about: ["yourself", "who are you", "intro","introduction", "background", "profile"],
-  skills: ["skills", "technologies", "tools", "expertise", "strengths", "tech stacks"],
-  projects: ["projects", "portfolio", "applications", "apps", "worked on", "built"],
+  about: [
+    "yourself",
+    "who are you",
+    "intro",
+    "introduction",
+    "background",
+    "profile",
+  ],
+  skills: [
+    "skills",
+    "technologies",
+    "tools",
+    "expertise",
+    "strengths",
+    "tech stacks",
+  ],
+  projects: [
+    "projects",
+    "portfolio",
+    "applications",
+    "apps",
+    "worked on",
+    "built",
+  ],
   experience: ["experience", "work history", "career", "roles", "jobs"],
   fun: ["fun", "hobbies", "interests", "free time", "hobby"],
-  contact: ["contact", "email", "phone", "linkedin", "github"]
+  contact: ["contact", "email", "phone", "linkedin", "github"],
 };
 
 function detectKeywordBias(message) {
   const lowerMsg = message.toLowerCase();
   for (const [section, keywords] of Object.entries(keywordBias)) {
-    if (keywords.some(k => lowerMsg.includes(k))) {
+    if (keywords.some((k) => lowerMsg.includes(k))) {
       return section;
     }
   }
@@ -46,15 +67,17 @@ export async function chatHandler(req, res) {
     if (!queryEmbedding)
       return res.status(400).json({ error: "Failed to generate embedding" });
 
-    const scoredDocs = indexData.documents.map(doc => {
-      const emb = vectorsMap.get(doc.id);
-      if (!emb) return null;
-      return {
-        section: doc.metadata.section,
-        id: doc.id,
-        score: cosineSim(queryEmbedding, emb)
-      };
-    }).filter(Boolean);
+    const scoredDocs = indexData.documents
+      .map((doc) => {
+        const emb = vectorsMap.get(doc.id);
+        if (!emb) return null;
+        return {
+          section: doc.metadata.section,
+          id: doc.id,
+          score: cosineSim(queryEmbedding, emb),
+        };
+      })
+      .filter(Boolean);
 
     scoredDocs.sort((a, b) => b.score - a.score);
     let bestDoc = scoredDocs[0];
@@ -62,24 +85,31 @@ export async function chatHandler(req, res) {
 
     const keywordSection = detectKeywordBias(message);
     if (keywordSection) {
-      bestDoc.section = keywordSection; 
+      bestDoc.section = keywordSection;
+      console.log(`Keyword detected: ${keywordSection}`);
     } else {
       const margin = bestDoc.score - secondBest.score;
       if (margin < 0.02) {
         bestDoc.section = "about";
+        console.log(`Low confidence, defaulting to about`);
       }
     }
 
-    if (!bestDoc) return res.status(404).json({ error: "No matching section found" });
+    console.log(`Final section selected: ${bestDoc.section}`);
+
+    if (!bestDoc)
+      return res.status(404).json({ error: "No matching section found" });
 
     const fakeReq = { params: { section: bestDoc.section } };
     const fakeRes = {
-      json: data => res.json({ section: bestDoc.section, ...data }),
-      status: code => ({ json: data => res.status(code).json(data) })
+      json: (data) => {
+        console.log(`Chat controller returning section: ${bestDoc.section}`);
+        res.json({ section: bestDoc.section, ...data });
+      },
+      status: (code) => ({ json: (data) => res.status(code).json(data) }),
     };
 
     await getSection(fakeReq, fakeRes);
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
