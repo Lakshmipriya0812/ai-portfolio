@@ -26,8 +26,8 @@ const FunSection: React.FC<FunSectionProps> = ({ aiText }) => {
   }
   return (
     <div className="response-wrapper">
-      <div className=" bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 p-8 text-left flex flex-col justify-center h-auto w-full max-w-xl mx-auto">
-        <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 text-left flex flex-col justify-center h-auto w-full max-w-2xl mx-auto">
+        <h3 className="text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 mb-4">
           {title}
         </h3>
 

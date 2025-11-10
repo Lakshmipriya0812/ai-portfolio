@@ -9,7 +9,7 @@ type ExperienceItem = {
   company?: string;
   period?: string;
   highlights?: string[];
-  aiText?: string;
+  enhancedHighlights?: string[];
 };
 
 type ExperienceTestimonialProps = {
@@ -26,8 +26,8 @@ export const ExperienceTestimonial = ({
     designation: `${exp.company || "Unknown Company"} • ${
       exp.period || "Unknown Period"
     }`,
-    highlights: exp.highlights || [],
-    aiText: exp.aiText || "",
+    // Use AI-enhanced highlights if available, otherwise use original
+    highlights: exp.enhancedHighlights || exp.highlights || [],
   }));
 
   const handleNext = () =>
@@ -61,31 +61,22 @@ export const ExperienceTestimonial = ({
           <h3 className="text-2xl font-semibold mb-1">{current.name}</h3>
           <p className="text-md text-gray-300 mb-4">{current.designation}</p>
 
-          {/* AI Insights */}
-          {current.aiText ? (
+          {/* Key Contributions */}
+          {current.highlights && current.highlights.length > 0 && (
             <motion.div
-              className="space-y-2 text-lg text-gray-200 leading-snug"
+              className="space-y-2 text-lg text-gray-200 leading-snug mb-6"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.4 }}
             >
-              <h4 className="text-xl font-semibold mb-2">
-                Professional Highlights
-              </h4>
-              {current.aiText
-                .split("\n")
-                .filter((line) => line.trim() !== "")
-                .map((line, i) => (
-                  <div key={i} className="flex items-start gap-2">
-                    <span className="w-2 h-2 rounded-full bg-blue-400 mt-2"></span>
-                    <p>{cleanLine(line)}</p>
-                  </div>
-                ))}
+              <h4 className="text-xl font-semibold mb-2">Key Contributions</h4>
+              {current.highlights.map((highlight, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  <span className="w-2 h-2 rounded-full bg-blue-400 mt-2"></span>
+                  <p>{cleanLine(highlight)}</p>
+                </div>
+              ))}
             </motion.div>
-          ) : (
-            <p className="text-gray-400 italic">
-              No Key Contributions available.
-            </p>
           )}
         </motion.div>
 

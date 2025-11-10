@@ -1,9 +1,18 @@
 import fs from "fs";
 import path from "path";
 import { generateText } from "../lib/generation.js";
+import {
+  getCachedResponse,
+  setCachedResponse,
+  clearCache,
+} from "../lib/cache.js";
 
 const indexPath = path.join(process.cwd(), "storage", "indexStore.json");
 const index = JSON.parse(fs.readFileSync(indexPath, "utf-8"));
+
+// Clear cache on startup to ensure fresh responses
+clearCache();
+console.log("Cache cleared on startup");
 
 // ---------------- Helper function ----------------
 function cleanAIResponse(aiResponse) {
@@ -13,37 +22,96 @@ function cleanAIResponse(aiResponse) {
     : aiResponse.trim();
 }
 
-// ---------------- Controller ----------------
+// Fast AI generation with caching
+async function getAIResponse(section, prompt, forceGenerate = false) {
+  // Temporary bypass for testing - remove when AI is working
+  const BYPASS_AI = false; // Set to false when models are working properly
+
+  console.log(
+    `getAIResponse called with section: ${section}, bypass: ${BYPASS_AI}`
+  );
+
+  if (BYPASS_AI) {
+    const quickResponses = {
+      about:
+        "Hello, I'm Lakshmipriya! 👋 I'm a passionate software engineer with an MS from Drexel University. I specialize in full-stack development, DevOps, and AI-powered systems. Always excited to build innovative solutions! 🚀",
+      skills:
+        "I bring a diverse tech toolkit to the table! 💻 From React and Python to AWS and AI tools, I love working across the full stack. I'm passionate about clean code, DevOps practices, and continuous learning! ✨",
+      projects:
+        "I've got some exciting projects under my belt! 🎉 From AI-powered e-commerce platforms to game engines and blockchain tokens. Each project taught me something new and pushed my technical boundaries! 🚀",
+      experience:
+        "My journey has taken me through DevOps at Epilogue Systems, software engineering at Techavidity, and full-stack development at Intellint Technology. Each role has been a fantastic learning experience! 💼",
+      fun: "When I'm not coding, I'm totally obsessed with baking! 🧁 I love creating everything from rainbow cakes to decadent brownies. Baking is my creative outlet where I mix flavors, textures, and colors! 🎂✨",
+    };
+    const response =
+      quickResponses[section] ||
+      "Thanks for your question! I'm excited to share more about my journey in tech! 😊";
+    console.log(
+      `Returning bypass response for ${section}: ${response.substring(
+        0,
+        50
+      )}...`
+    );
+    return response;
+  }
+
+  // Check cache first
+  const cacheKey = `${section}_${prompt.slice(0, 100)}`;
+  const cached = getCachedResponse(cacheKey);
+  if (cached && !forceGenerate) return cached;
+
+  // Generate new response
+  console.log(
+    `Calling generateText with prompt: ${prompt.substring(0, 100)}...`
+  );
+  const aiTextRaw = await generateText(prompt);
+  console.log(`Raw AI response: "${aiTextRaw}"`);
+  const aiText = cleanAIResponse(aiTextRaw);
+  console.log(`Cleaned AI response: "${aiText}"`);
+
+  // Cache the response
+  setCachedResponse(cacheKey, aiText);
+  return aiText;
+} // ---------------- Controller ----------------
 export async function getSection(req, res) {
   const { section } = req.params;
   const myName = "Lakshmipriya";
 
+  console.log(`getSection called with section: ${section}`);
+
   try {
     switch (section) {
       case "about": {
+        console.log("Processing about section");
         const doc = index.documents.find((d) => d.metadata.section === "about");
-        const prompt = `Write a 4-5 line friendly, enthusiastic introduction using this content: ${doc.content}.
-        Start the text with: "Hello, I'm ${myName}."
-        Add greeting and emoji.`;
+        const prompt = `Write a friendly, enthusiastic 4-5 line introduction using this content: "${doc.content}". 
 
-        const aiTextRaw = await generateText(prompt);
-        const aiText = cleanAIResponse(aiTextRaw);
+Requirements:
+- Start with "Hello, I'm Lakshmipriya!" with a greeting emoji
+- Mention your MS from Drexel University
+- Highlight full-stack development, DevOps, and AI-powered systems expertise
+- Include your experience with Python, Java, JavaScript, React, Spring Boot, SQL, and AWS
+- Add enthusiasm and personality with appropriate emojis
+- Make it warm and engaging, like you're excited to share your story`;
 
+        const aiText = await getAIResponse("about", prompt);
         return res.json({ structured: { ...doc, type: "about" }, aiText });
       }
 
       case "fun": {
         const doc = index.documents.find((d) => d.metadata.section === "fun");
+        const prompt = `Write an enthusiastic, detailed response about my baking hobby using this content: "${doc.content}". 
 
-        const prompt = `Write a 4-5 line friendly, enthusiastic text using this content: "${doc.content}".
-        Start the text with: "Hello, I'm ${myName}."
-        Do not change the name.
-        Add emojis where appropriate.
-        Include a real fun fact or a playful quote about baking, cakes, or desserts to make it more lively and engaging.`;
+Requirements:
+- Start with "Hello, I'm Lakshmipriya!" with a friendly emoji
+- Write 4-5 sentences about my passion for baking
+- Mention specific treats: rainbow cakes, strawberry cakes, cupcakes, fudges, brownies, mousse
+- Talk about creativity, flavors, textures, colors, and sharing with friends/family
+- Include plenty of baking emojis (🧁 🎂 🍰 🌈 ✨ etc.)
+- Show genuine excitement and passion for this creative outlet
+- End with something warm about how baking brings joy`;
 
-        const aiTextRaw = await generateText(prompt);
-        const aiText = cleanAIResponse(aiTextRaw);
-
+        const aiText = await getAIResponse("fun", prompt);
         return res.json({ structured: doc, aiText });
       }
 
@@ -52,31 +120,25 @@ export async function getSection(req, res) {
           (d) => d.metadata.section === section
         );
         const highlighted = docs.slice(0, 3);
+
         const projectsInfo = highlighted
           .map(
-            (d, i) => `Project ${i + 1}:
-      Name: ${d.metadata.name}
-      Technologies: ${d.metadata.technologies.join(", ")}
-      Key achievements: ${d.metadata.highlights.join("; ")}`
+            (d, i) => `Project ${i + 1}: ${d.metadata.name}
+Technologies: ${d.metadata.technologies.join(", ")}
+Key achievements: ${d.metadata.highlights.join("; ")}
+${d.metadata.demo ? `Demo: ${d.metadata.demo}` : ""}
+${d.metadata.github ? `GitHub: ${d.metadata.github}` : ""}`
           )
           .join("\n\n");
-        const prompt = `
-      You are a professional portfolio assistant. Use ONLY the following project information EXACTLY as provided. 
-      DO NOT invent anything, do not change project names, technologies, or achievements.
-      
-      ${projectsInfo}
-      
-      Generate a friendly, portfolio-style text:
-      - Start with a casual intro, e.g., "I've got some cool projects under my belt! 🎉 Here are a few highlights:"
-      - Use short bullet points (1-2 sentences) for each project describing what it does and its impact.
-      - Add emojis where appropriate.
-      - Mention that there are other projects in one sentence after the highlighted ones.
-      - End with a friendly closing line inviting engagement, e.g., "Got a project you wanna dive into? 😄"
-      - Keep it concise, fun, and professional.
-      `;
 
-        const aiTextRaw = await generateText(prompt);
-        const aiText = cleanAIResponse(aiTextRaw);
+        const prompt = `Write a fun intro about these projects using ONLY this data:
+
+${projectsInfo}
+
+Start with "I've got some cool projects!" Use brief bullet points for each project. Add project emojis. Keep it conversational and mention there are more projects. End with engagement question.`;
+
+        const aiText = await getAIResponse("projects", prompt);
+
         const projectsData = {
           type: "projects",
           items: docs.map((doc) => ({
@@ -99,27 +161,24 @@ export async function getSection(req, res) {
         const docs = index.documents.filter(
           (d) => d.metadata.section === section
         );
-        const skillListing = docs
-          .map(
-            (d) =>
-              `**${d.metadata.category}**\n- ${d.metadata.items.join("\n- ")}`
-          )
-          .join("\n\n");
-        const prompt = `
-      You are a professional portfolio assistant. Using ONLY the following skill categories and items, 
-      write a short, friendly paragraph in first-person about my skills. 
-      
-      ${skillListing}
-      
-      Requirements:
-      - Use first-person ("I", "my") from my perspective
-      - Mention the breadth of skills and diversity (frontend, backend, AI, tools, soft skills)
-      - Keep it friendly, approachable, and concise
-      - Use emojis appropriately
-      `;
 
-        const aiTextRaw = await generateText(prompt);
-        const aiText = cleanAIResponse(aiTextRaw);
+        const skillListing = docs
+          .map((d) => `${d.metadata.category}: ${d.metadata.items.join(", ")}`)
+          .join("\n");
+
+        const prompt = `Write an enthusiastic, detailed paragraph about my diverse technical skills using this data:
+
+${skillListing}
+
+Requirements:
+- Use first-person ("I", "my") from my perspective
+- Write 3-4 sentences highlighting the breadth of skills
+- Mention how I work across frontend, backend, DevOps, AI tools, and soft skills
+- Add relevant tech emojis (💻 🚀 ⚡ 🛠️ etc.)
+- Show excitement and passion for technology
+- Keep it conversational and engaging`;
+
+        const aiText = await getAIResponse("skills", prompt);
 
         const skillsData = {
           type: "skills",
@@ -143,38 +202,56 @@ export async function getSection(req, res) {
             );
           });
 
-        const aiSummaries = await Promise.all(
+        // Generate enhanced bullet points for each position
+        const itemsWithAI = await Promise.all(
           docs.map(async (doc) => {
-            const prompt = `
-              You are a professional portfolio assistant.
-              Using the following highlights, write 4-5 concise, friendly bullet points describing my work and contributions. 
-              Do NOT repeat the role, company, or period — those are already displayed.
+            const prompt = `Take these work highlights and enhance them into engaging, impactful bullet points:
 
-              Highlights:
-              ${doc.metadata.highlights.map((h) => `- ${h}`).join("\n")}
+Role: ${doc.metadata.role} at ${doc.metadata.company}
+Original highlights:
+${doc.metadata.highlights.map((h, i) => `${i + 1}. ${h}`).join("\n")}
 
-              Requirements:
-              - 4-5 bullets max
-              - Keep each bullet 1-2 sentences
-              - Write in first-person ("I", "my") from my perspective
-              - Include emojis where appropriate
-              - Focus on skills, learning, growth, and impact
-              `;
-            const raw = await generateText(prompt);
-            return cleanAIResponse(raw);
+Requirements:
+- Return exactly ${
+              doc.metadata.highlights.length
+            } bullet points (one per original highlight)
+- Make each point start with a strong action verb
+- Keep the technical details and technologies mentioned
+- Add relevant emojis (🚀 💻 ⚡ 🛠️ 📊 etc.)
+- Make it sound impressive but authentic
+- Each point should be 1-2 lines maximum
+- Return ONLY the bullet points, no introduction or conclusion
+- Format: Start each line with "• " (bullet point)`;
+
+            const aiEnhanced = await getAIResponse(
+              `exp_${doc.metadata.company}`,
+              prompt
+            );
+
+            // Parse AI response into array of bullet points
+            const enhancedPoints = aiEnhanced
+              .split("\n")
+              .filter((line) => line.trim().length > 0)
+              .map((line) => line.replace(/^[•\-\*]\s*/, "").trim())
+              .filter((line) => line.length > 0);
+
+            return {
+              role: doc.metadata.role,
+              company: doc.metadata.company,
+              period: doc.metadata.period,
+              highlights: doc.metadata.highlights, // Original highlights
+              enhancedHighlights:
+                enhancedPoints.length > 0
+                  ? enhancedPoints
+                  : doc.metadata.highlights,
+            };
           })
         );
 
         const experienceData = {
           type: "experience",
           title: "💼 Professional Experience",
-          items: docs.map((doc, idx) => ({
-            role: doc.metadata.role,
-            company: doc.metadata.company,
-            period: doc.metadata.period,
-            highlights: [],
-            aiText: aiSummaries[idx],
-          })),
+          items: itemsWithAI,
         };
 
         return res.json({ structured: experienceData });

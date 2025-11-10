@@ -1,12 +1,12 @@
 import React from "react";
-import { ExperienceTestimonial } from "../ExperienceTestimonial"; 
+import { ExperienceTestimonial } from "../ExperienceTestimonial";
 
 interface ExperienceItem {
   role?: string;
   company?: string;
   period?: string;
   highlights?: string[];
-  aiText?: string;
+  enhancedHighlights?: string[];
 }
 
 interface ExperienceSectionProps {
@@ -14,12 +14,14 @@ interface ExperienceSectionProps {
     title?: string;
     items: ExperienceItem[];
   };
-  aiText?: string;
 }
 
-const ExperienceSection: React.FC<ExperienceSectionProps> = ({ structured }) => {
+const ExperienceSection: React.FC<ExperienceSectionProps> = ({
+  structured,
+}) => {
   const items: ExperienceItem[] = structured?.items || [];
   if (!items.length) return null;
+
   return (
     <div className="experience-section w-full">
       <div className="text-left space-y-4 mb-8">

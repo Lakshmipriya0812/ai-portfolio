@@ -10,7 +10,7 @@ import {
 } from "react-icons/fa";
 
 import type { ReactElement } from "react";
-
+import React, { useState } from "react";
 const iconMap: Record<string, ReactElement> = {
   Frontend: (
     <FaCode className="inline-block mr-2 text-indigo-500 opacity-90 text-base" />
@@ -50,6 +50,9 @@ interface SkillsSectionProps {
 }
 
 const SkillsSection = ({ structured, aiText }: SkillsSectionProps) => {
+  const [showSkills, setShowSkills] = useState(true);
+  const [showAI, setShowAI] = useState(true);
+
   if (!structured?.categories?.length) {
     return (
       <div className="text-gray-500 text-center">
@@ -59,44 +62,65 @@ const SkillsSection = ({ structured, aiText }: SkillsSectionProps) => {
   }
 
   return (
-    <div className="skills-section w-full">
+    <div className="skills-section w-full max-w-4xl mx-auto">
+      {/* Visibility Toggles */}
+      <div className="flex justify-end gap-4 mb-6">
+        <button
+          onClick={() => setShowSkills((prev) => !prev)}
+          className="text-sm px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white text-gray-800 dark:bg-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+        >
+          {showSkills ? "Hide Skills" : "Show Skills"}
+        </button>
+
+        {aiText && (
+          <button
+            onClick={() => setShowAI((prev) => !prev)}
+            className="text-sm px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white text-gray-800 dark:bg-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            {showAI ? "Hide AI Insights" : "Show AI Insights"}
+          </button>
+        )}
+      </div>
+
       {/* Skills Content */}
-      <section className="text-left mb-8">
-        {/* Header */}
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-black mb-8">
-          {structured.title || "Skills & Expertise"}
-        </h2>
+      {showSkills && (
+        <section className="text-left mb-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-8">
+          {/* Header */}
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
+            {structured.title || "Skills & Expertise"}
+          </h2>
 
-        {/* Categories */}
-        <div className="max-h-[400px] overflow-y-auto pr-1 space-y-8">
-          {structured.categories.map((category, idx) => {
-            const icon = iconMap[category.title] || null;
+          {/* Categories */}
+          <div className="max-h-[400px] overflow-y-auto pr-1 space-y-8">
+            {structured.categories.map((category, idx) => {
+              const icon = iconMap[category.title] || null;
 
-            return (
-              <div key={idx}>
-                <h3 className="text-xl font-semibold text-gray-800 dark:text-black mb-4 flex items-center">
-                  {icon}
-                  {category.title}
-                </h3>
+              return (
+                <div key={idx}>
+                  <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
+                    {icon}
+                    {category.title}
+                  </h3>
 
-                <div className="flex flex-wrap gap-3">
-                  {category.skills.map((skill, i) => (
-                    <span
-                      key={i}
-                      className="px-4 py-1.5 text-sm font-medium text-gray-800 dark:text-black bg-balck/60 dark:bg-black/10 border border-gray-400 dark:border-white/20 backdrop-blur-md rounded-full shadow-sm hover:shadow-md hover:bg-gradient-to-r hover:from-indigo-100 hover:to-purple-100 transition"
-                    >
-                      {skill}
-                    </span>
-                  ))}
+                  <div className="flex flex-wrap gap-3">
+                    {category.skills.map((skill, i) => (
+                      <span
+                        key={i}
+                        className="px-4 py-1.5 text-sm font-medium text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 backdrop-blur-md rounded-full shadow-sm hover:shadow-md hover:bg-gradient-to-r hover:from-indigo-100 hover:to-purple-100 dark:hover:from-indigo-900 dark:hover:to-purple-900 transition"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* AI Insights Section */}
-      {aiText && (
+      {aiText && showAI && (
         <div className="ai-insights-section mt-8">
           <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-6 border border-blue-100 dark:border-gray-700 shadow-sm">
             <div className="flex items-center gap-3 mb-4">

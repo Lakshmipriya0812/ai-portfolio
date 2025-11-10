@@ -52,7 +52,7 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
   }
 
   return (
-    <div className="projects-section w-full">
+    <div className="projects-section w-full max-w-4xl mx-auto">
       {/* Visibility Toggles */}
       <div className="flex justify-end gap-4 mb-6">
         <button
