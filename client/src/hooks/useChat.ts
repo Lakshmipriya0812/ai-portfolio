@@ -22,6 +22,7 @@ export const useChat = (initialQuery?: string) => {
 
   const handleSendMessage = useCallback(
     async (message?: string) => {
+
       // Block if rate limited
       if (isRateLimited) {
         return;
@@ -45,6 +46,7 @@ export const useChat = (initialQuery?: string) => {
 
       try {
         const resData = await apiService.sendChatMessage(question);
+
         const aiText = resData.aiText;
         const structured = resData.structured;
 
@@ -70,6 +72,7 @@ export const useChat = (initialQuery?: string) => {
         setCurrentInteraction({
           ...newInteraction,
           response: errorMessage,
+
           structured: undefined,
           isLoading: false,
         });
