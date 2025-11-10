@@ -1,7 +1,9 @@
 import fetch from "node-fetch";
 
-const OLLAMA_BASE_URL = "http://localhost:11434/api/embeddings";
-const MODEL = "nomic-embed-text";
+const OLLAMA_BASE_URL = process.env.OLLAMA_URL
+  ? `${process.env.OLLAMA_URL}/api/embeddings`
+  : "http://localhost:11434/api/embeddings";
+const MODEL = process.env.OLLAMA_EMBEDDING_MODEL || "nomic-embed-text";
 
 export async function getEmbedding(text) {
   try {

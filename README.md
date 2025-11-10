@@ -15,20 +15,6 @@ This README provides a concise, professional guide to running, developing, and d
 
 ---
 
-## Repository layout
-
-Top-level folders:
-
-- `client/` — React frontend (Vite + TypeScript). Key subfolders:
-  - `src/components` — React components (chat, home, quick-actions, UI)
-  - `src/hooks` — custom hooks (useChat, useHome)
-  - `src/constants` / `src/types` — shared constants and TypeScript types
-- `server/` — Node.js Express backend that exposes ingestion and chat endpoints
-  - `src/` — server implementation, routes, controllers, and helpers
-  - `data/` & `storage/` — sample knowledge data and index storage
-
----
-
 ## Features
 
 - Interactive chat with typed / quick-action prompts
@@ -53,7 +39,21 @@ cd client && npm install
 cd ../server && npm install
 ```
 
-2. Start the development servers
+2. Configure AI Provider (Backend)
+
+Create a `.env` file in the `server` directory and configure your preferred AI provider:
+
+```bash
+cd server
+cp env-template.txt .env
+# Edit .env with your AI provider credentials
+```
+
+> 📖 **See [AI_SETUP.md](./AI_SETUP.md) for detailed AI provider configuration guide**
+>
+> Including setup instructions for Gemini, Ollama, OpenAI, Anthropic, and Hugging Face.
+
+3. Start the development servers
 
 ```bash
 # Run frontend dev server

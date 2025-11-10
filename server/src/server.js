@@ -17,6 +17,11 @@ import sectionRoutes from "./routes/sections.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { chatHandler } from "./controllers/chatControllers.js";
 import { validateChatRequest } from "./middleware/validation.js";
+import {
+  rateLimitMiddleware,
+  getRateLimitStats,
+} from "./middleware/rateLimiter.js";
+import { trackRequest, getUsageStats } from "./lib/usageTracker.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -70,6 +75,13 @@ app.use("/api/", limiter);
 // ----------------- Middleware -----------------
 app.use(compression());
 app.use(morgan("combined"));
+
+// Track all requests
+app.use((req, res, next) => {
+  trackRequest();
+  next();
+});
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
@@ -131,11 +143,33 @@ app.post("/api/ingest", async (req, res, next) => {
   }
 });
 
-// Sections route
-app.use("/api/sections", sectionRoutes);
+// Sections route with IP rate limiting
+app.use("/api/sections", rateLimitMiddleware, sectionRoutes);
 
-// Chat route with validation
-app.post("/api/chat", validateChatRequest, chatHandler);
+// Chat route with IP rate limiting and validation
+app.post("/api/chat", rateLimitMiddleware, validateChatRequest, chatHandler);
+
+// ----------------- Monitoring Endpoints -----------------
+
+// Usage statistics (for admin/monitoring)
+app.get("/api/stats/usage", (req, res) => {
+  try {
+    const stats = getUsageStats();
+    res.json({ success: true, stats });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to get usage stats" });
+  }
+});
+
+// Rate limit statistics
+app.get("/api/stats/rate-limits", (req, res) => {
+  try {
+    const stats = getRateLimitStats();
+    res.json({ success: true, stats });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to get rate limit stats" });
+  }
+});
 
 // ----------------- Production: serve frontend -----------------
 if (process.env.NODE_ENV === "production") {
