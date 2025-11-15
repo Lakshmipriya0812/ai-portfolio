@@ -32,7 +32,6 @@ primary_region = "iad"  # Change to your preferred region
   cpus = 1
   memory_mb = 256
 
-# Uncomment and configure if you need persistent storage
-# [[mounts]]
-#   source = "data"
-#   destination = "/app/server/storage"
+[mounts]
+source="storage"
+destination="/app/server/storage"
