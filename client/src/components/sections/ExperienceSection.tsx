@@ -14,6 +14,7 @@ interface ExperienceSectionProps {
     title?: string;
     items: ExperienceItem[];
   };
+  aiText?: string;
 }
 
 const ExperienceSection: React.FC<ExperienceSectionProps> = ({
