@@ -2,6 +2,7 @@
 # Multi-stage Dockerfile for Full-Stack App
 # React (Vite) + Node.js (Express)
 # Optimized for Fly.io deployment
+#use node 20 alpine as base image
 # ============================================
 
 # ============================================
