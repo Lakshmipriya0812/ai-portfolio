@@ -2,17 +2,13 @@
 # AI PROVIDER CONFIGURATION
 # ============================================
 # Choose your AI provider: 'ollama' | 'openai' | 'huggingface' | 'gemini' | 'anthropic'
-
 AI_PROVIDER= add_your_provider
-
 
 # OLLAMA (Local Models) - DEFAULT
 # No API key needed, runs locally
 OLLAMA_URL=http://localhost:11434
 OLLAMA_MODEL=llama3.2:1b
-
 OLLAMA_EMBEDDING_MODEL=nomic-embed-text
-
 
 # OPENAI (GPT Models)
 # Get API key from: https://platform.openai.com/api-keys

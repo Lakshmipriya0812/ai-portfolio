@@ -173,10 +173,11 @@ app.get("/api/stats/rate-limits", (req, res) => {
 
 // ----------------- Production: serve frontend -----------------
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(join(__dirname, "../client/dist")));
+  const staticPath = join(__dirname, "../client/dist");
+  app.use(express.static(staticPath));
 
   app.get("*", (req, res) => {
-    res.sendFile(join(__dirname, "../client/dist/index.html"));
+    res.sendFile(join(staticPath, "index.html"));
   });
 }
 
