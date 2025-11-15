@@ -1,14 +1,17 @@
 {
   "compilerOptions": {
+    "target": "ES2021", // Modern JS target
+    "module": "ESNext",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "baseUrl": "./src",
-    "paths": {
-      "@/*": ["*"]
-    },
+    "paths": { "@/*": ["*"] },
     "strict": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true, // important to skip library type issues
     "jsx": "react-jsx",
-    "types": ["vite/client", "node"]   // <-- add "node"
+    "types": ["vite/client", "node"]
   },
   "include": ["src"]
 }

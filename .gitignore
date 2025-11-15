@@ -41,3 +41,6 @@ server/.env
 #ollama-models
 /server/ollama_data
 /server/ollama_data/models
+
+# TypeScript build cache
+tsconfig.tsbuildinfo
