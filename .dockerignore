@@ -1,0 +1,80 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build outputs
+client/dist/
+client/build/
+server/dist/
+server/build/
+
+# Development
+.env
+.env.local
+.env.development
+.env.test
+*.local
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+coverage/
+.nyc_output/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Documentation
+README.md
+SECURITY.md
+AI_SETUP.md
+*.md
+
+# Logs
+logs/
+*.log
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Fly.io
+fly.toml
+
+# Other
+.eslintrc*
+.prettierrc*
+tsconfig*.json
+vite.config.ts
+postcss.config.js
+tailwind.config.js
+eslint.config.js
+
+# PDFs and large files (if not needed in production)
+*.pdf
