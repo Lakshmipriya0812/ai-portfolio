@@ -7,7 +7,7 @@
 # ============================================
 # Stage 1: Build Frontend
 # ============================================
-FROM node:18-alpine AS frontend-builder
+FROM node:20-alpine AS frontend-builder
 
 # Set working directory for frontend
 WORKDIR /app/client
@@ -27,7 +27,7 @@ RUN npm run build
 # ============================================
 # Stage 2: Build Backend Dependencies
 # ============================================
-FROM node:18-alpine AS backend-builder
+FROM node:20-alpine AS backend-builder
 
 # Set working directory for backend
 WORKDIR /app/server
@@ -41,7 +41,7 @@ RUN npm ci --only=production
 # ============================================
 # Stage 3: Production Runtime
 # ============================================
-FROM node:18-alpine AS production
+FROM node:20-alpine AS production
 
 # Install dumb-init for proper signal handling
 RUN apk add --no-cache dumb-init
