@@ -2,7 +2,7 @@
 # Multi-stage Dockerfile for Full-Stack App
 # React (Vite) + Node.js (Express)
 # Optimized for Fly.io deployment
-#use node 20 alpine as base image
+# use node 20 alpine as base image
 # ============================================
 
 # ============================================
@@ -60,7 +60,7 @@ COPY --from=backend-builder /app/server/node_modules ./server/node_modules
 COPY --from=frontend-builder /app/client/dist ./server/client/dist
 
 # Create storage folder and empty indexStore.json to avoid ENOENT
-RUN mkdir -p /app/server/storage
+# RUN mkdir -p /app/server/storage
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
@@ -88,5 +88,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start the server
-CMD ["sh", "-c", "test -f storage/indexStore.json || npm run ingest && node src/server.js"]
+CMD ["sh", "-c", "test -f storage/indexStore.json && node src/server.js"]
 
