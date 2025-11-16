@@ -69,36 +69,68 @@ export async function ingestData() {
   if (knowledge.experience?.positions) {
     for (let i = 0; i < knowledge.experience.positions.length; i++) {
       const pos = knowledge.experience.positions[i];
-      const content = `${pos.role} at ${pos.company}, ${pos.period}, ${pos.location}. Highlights: ${pos.highlights.join("; ")}`;
-      await addDocument(index, `experience:${i}`, "experience", pos.role, content, {
-        section: "experience",
-        ...pos,
-      });
+      const content = `${pos.role} at ${pos.company}, ${pos.period}, ${
+        pos.location
+      }. Highlights: ${pos.highlights.join("; ")}`;
+      await addDocument(
+        index,
+        `experience:${i}`,
+        "experience",
+        pos.role,
+        content,
+        {
+          section: "experience",
+          ...pos,
+        }
+      );
     }
   }
 
   if (knowledge.projects?.items) {
     await Promise.all(
       knowledge.projects.items.map((proj, i) => {
-        const content = `${proj.name} - Technologies: ${proj.technologies.join(", ")}. Highlights: ${proj.highlights.join("; ")}`;
-        return addDocument(index, `project:${i}`, "project", proj.name, content, {
-          section: "projects",
-          ...proj,
-        });
+        const content = `${proj.name} - Technologies: ${proj.technologies.join(
+          ", "
+        )}. Highlights: ${proj.highlights.join("; ")}`;
+        return addDocument(
+          index,
+          `project:${i}`,
+          "project",
+          proj.name,
+          content,
+          {
+            section: "projects",
+            ...proj,
+          }
+        );
       })
     );
   }
 
   if (knowledge.contact?.details) {
     const content = `Email: ${knowledge.contact.details.email}, Phone: ${knowledge.contact.details.phone}, LinkedIn: ${knowledge.contact.details.LinkedIn}, GitHub: ${knowledge.contact.details.GitHub}`;
-    await addDocument(index, "contact:main", "contact", knowledge.contact.title, content, {
-      section: "contact",
-      ...knowledge.contact.details,
-    });
+    await addDocument(
+      index,
+      "contact:main",
+      "contact",
+      knowledge.contact.title,
+      content,
+      {
+        section: "contact",
+        ...knowledge.contact.details,
+      }
+    );
   }
 
+  const storageDir = path.dirname(indexStorePath);
+  if (!fs.existsSync(storageDir)) {
+    fs.mkdirSync(storageDir, { recursive: true });
+  }
   fs.writeFileSync(indexStorePath, JSON.stringify(index, null, 2));
-  console.log(`Ingestion complete. ${index.documents.length} documents indexed.`);
+
+  console.log(
+    `Ingestion complete. ${index.documents.length} documents indexed.`
+  );
 
   return { success: true, totalDocuments: index.documents.length };
 }
