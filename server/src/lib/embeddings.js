@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import { aiService } from "../services/AIService.js";
+import { aiService } from "../lib/aiService.js";
 
 const isLocal = process.env.NODE_ENV !== "production";
 
