@@ -88,5 +88,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start the server
-CMD ["sh", "-c", "test -f storage/indexStore.json && node src/server.js"]
+CMD ["sh", "-c", "test -f storage/indexStore.json && node server.js"]
 
