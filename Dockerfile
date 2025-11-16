@@ -59,6 +59,9 @@ COPY --from=backend-builder /app/server/node_modules ./server/node_modules
 # Copy built frontend from frontend-builder stage to server directory
 COPY --from=frontend-builder /app/client/dist ./server/client/dist
 
+# Create storage folder and empty indexStore.json to avoid ENOENT
+RUN mkdir -p /app/server/storage
+
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001 && \
@@ -85,4 +88,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start the server
-CMD ["node", "src/server.js"]
+CMD ["sh", "-c", "test -f storage/indexStore.json || npm run ingest && node src/server.js"]
+
