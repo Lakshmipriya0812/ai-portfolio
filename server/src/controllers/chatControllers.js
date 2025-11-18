@@ -10,9 +10,27 @@ const vectorsMap = new Map(indexData.vectors.map((v) => [v.id, v.embedding]));
 
 // ---------------- Helper: cosine similarity ----------------
 function cosineSim(vecA, vecB) {
+  // Ensure both inputs are arrays
+  if (!Array.isArray(vecA) || !Array.isArray(vecB)) {
+    console.error("cosineSim error: one of the vectors is not an array", {
+      vecA,
+      vecB,
+    });
+    return 0; // or throw an error if you prefer
+  }
+
+  if (vecA.length !== vecB.length) {
+    console.error("cosineSim error: vectors have different lengths", {
+      vecA,
+      vecB,
+    });
+    return 0; // or throw an error
+  }
+
   const dot = vecA.reduce((sum, val, i) => sum + val * vecB[i], 0);
   const magA = Math.sqrt(vecA.reduce((sum, val) => sum + val * val, 0));
   const magB = Math.sqrt(vecB.reduce((sum, val) => sum + val * val, 0));
+
   return dot / (magA * magB + 1e-10);
 }
 
