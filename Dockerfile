@@ -51,13 +51,13 @@ RUN apk add --no-cache dumb-init
 WORKDIR /app
 
 # Copy backend source
-COPY server/ ./server/
+COPY server/ ./
 
 # Copy backend node_modules from builder stage
-COPY --from=backend-builder /app/server/node_modules ./server/node_modules
+COPY --from=backend-builder /app/server/node_modules ./node_modules
 
 # Copy built frontend from frontend-builder stage to server directory
-COPY --from=frontend-builder /app/client/dist ./server/client/dist
+COPY --from=frontend-builder /app/client/dist ./client/dist
 
 # Create storage folder and empty indexStore.json to avoid ENOENT
 # RUN mkdir -p /app/server/storage
