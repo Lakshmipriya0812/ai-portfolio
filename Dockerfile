@@ -1,28 +1,14 @@
 # ============================================
-# Multi-stage Dockerfile for Full-Stack App
-# React (Vite) + Node.js (Express)
-# Optimized for Fly.io deployment
-# use node 20 alpine as base image
-# ============================================
-
-# ============================================
 # Stage 1: Build Frontend
 # ============================================
 FROM node:20-alpine AS frontend-builder
 
-# Set working directory for frontend
 WORKDIR /app/client
 
-# Copy frontend package files
 COPY client/package*.json ./
+RUN npm ci
 
-# Install dependencies with clean install for reproducibility
-RUN npm ci --only=production=false
-
-# Copy frontend source code
 COPY client/ ./
-
-# Build the React app (outputs to dist/)
 RUN npm run build
 
 # ============================================
@@ -30,33 +16,27 @@ RUN npm run build
 # ============================================
 FROM node:20-alpine AS backend-builder
 
-# Set working directory for backend
 WORKDIR /app/server
-
-# Copy backend package files
 COPY server/package*.json ./
-
-# Install dependencies with clean install
 RUN npm ci --only=production
 
 # ============================================
-# Stage 3: Production Runtime
+# Stage 3: Production Image
 # ============================================
 FROM node:20-alpine AS production
 
-# Install dumb-init for proper signal handling
 RUN apk add --no-cache dumb-init
 
-# Create app directory
-WORKDIR /app
+# backend root
+WORKDIR /app/server
 
-# Copy backend source
+# Copy backend source code correctly
 COPY server/ ./
 
-# Copy backend node_modules from builder stage
+# Copy backend node_modules into correct place
 COPY --from=backend-builder /app/server/node_modules ./node_modules
 
-# Copy built frontend from frontend-builder stage to server directory
+# Copy frontend build output into correct backend location
 COPY --from=frontend-builder /app/client/dist ./client/dist
 
 # Create storage folder and empty indexStore.json to avoid ENOENT
@@ -70,19 +50,13 @@ RUN addgroup -g 1001 -S nodejs && \
 # Switch to non-root user
 USER nodejs
 
-# Set working directory to server
-WORKDIR /app/server
-
-# Environment variables
-ENV NODE_ENV=production \
-    PORT=8080
-
-# Expose the port (Fly.io uses 8080 by default)
+ENV NODE_ENV=production
+ENV PORT=8080
 EXPOSE 8080
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:${PORT}/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s \
+  CMD node -e "require('http').get('http://localhost:${PORT}/health', r => process.exit(r.statusCode === 200 ? 0 : 1))"
 
 # Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]
