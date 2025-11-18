@@ -10,7 +10,21 @@ primary_region = "iad"  # Change to your preferred region
 
 [env]
   NODE_ENV = "production"
-  PORT = "8080"
+  PORT = 8080
+  AI_PROVIDER = "gemini"
+  GEMINI_MODEL = "gemini-2.0-flash-exp"
+
+  # Rate Limiting
+  RATE_LIMIT_WINDOW_MS = 900000          # 15 minutes
+  RATE_LIMIT_MAX_REQUESTS = 100
+  MAX_REQUESTS_PER_IP = 12
+  IP_RATE_LIMIT_WINDOW_MS = 86400000     # 24 hours
+  MIN_REQUEST_INTERVAL_MS = 2000
+  ADMIN_IPS = ""                          # Comma-separated whitelist, if any
+
+  # Caching
+  CACHE_DURATION_MS = 172800000           # 48 hours
+  EMBEDDING_REQUEST_TIMEOUT_MS = 30000   # 30 seconds
 
 [http_service]
   internal_port = 8080
