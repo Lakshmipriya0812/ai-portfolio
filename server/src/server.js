@@ -26,6 +26,9 @@ import { trackRequest, getUsageStats } from "./lib/usageTracker.js";
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// ----------------- Trust Proxy -----------------
+app.set("trust proxy", 1); // trust the first proxy (needed for Fly.io, Heroku, etc.)
+
 // ----------------- Security Middleware -----------------
 app.use(
   helmet({
@@ -44,6 +47,7 @@ app.use(
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
   "http://localhost:3000",
   "http://localhost:5173",
+  "https://ai-portfolio.fly.dev",
 ];
 
 app.use(
