@@ -1,47 +1,46 @@
 # AI Portfolio — Lakshmipriya
 
-A lightweight, AI-powered portfolio and conversational interface for showcasing projects, skills, experience, and contact details. This repository contains a React + TypeScript frontend (Vite) and a Node.js Express backend that supports ingestion, simple embeddings, and chat-style interactions powered by an API layer.
-
-This README provides a concise, professional guide to running, developing, and deploying the project.
-
----
-
-## Highlights
-
-- Modern, responsive frontend built with React, TypeScript and Vite
-- Conversational chat UI with quick-action prompts and a searchable knowledge base
-- Node.js Express backend for ingesting and serving knowledge/embeddings
-- Clean component structure and simple hooks for chat and home interactions
+A lightweight AI-powered portfolio with a conversational interface for showcasing projects, skills, experience, and contact details.  
+Built with **React + TypeScript (Vite)** frontend and **Node.js Express** backend supporting AI-powered chat and embeddings.
 
 ---
 
 ## Features
 
-- Interactive chat with typed / quick-action prompts
-- Reusable QuickActions component used across pages (home, chat)
-- Expandable, animated UI elements using Framer Motion
-- Simple server-side endpoints for ingestion and chat proxying
+- Modern, responsive frontend with React + Vite
+- Conversational chat UI with quick-action prompts
+- Node.js Express backend for ingestion and chat proxy
+- Reusable components, Framer Motion animations, and simple hooks
+- Supports multiple AI providers: Gemini, Ollama, OpenAI, Anthropic, Hugging Face
 
 ---
 
-## Quick start (development)
+## Development Setup
 
-Prerequisites:
+### Prerequisites
 
-- Node.js 18+ (or supported LTS)
+- Node.js 18+
 - npm or yarn
 
-1. Install dependencies for both client and server
+### Steps
+
+1. Clone the repository:
 
 ```bash
-# from repo root
+git clone URL
+cd ai-portfolio
+```
+
+````
+
+2. Install dependencies:
+
+```bash
 cd client && npm install
 cd ../server && npm install
 ```
 
-2. Configure AI Provider (Backend)
-
-Create a `.env` file in the `server` directory and configure your preferred AI provider:
+3. Configure AI provider:
 
 ```bash
 cd server
@@ -49,44 +48,47 @@ cp env-template.txt .env
 # Edit .env with your AI provider credentials
 ```
 
-> 📖 **See [AI_SETUP.md](./AI_SETUP.md) for detailed AI provider configuration guide**
->
-> Including setup instructions for Gemini, Ollama, OpenAI, Anthropic, and Hugging Face.
-
-3. Start the development servers
+4. Start development servers:
 
 ```bash
-# Run frontend dev server
-cd client && npm run dev
+# Frontend
+cd client && npm run dev # opens at http://localhost:5173
 
-# In a separate terminal, run backend server
-cd server && npm run dev
+# Backend (separate terminal)
+cd server && npm run dev # listens on http://localhost:3001
 ```
 
-Open the frontend (Vite dev URL printed in terminal, typically http://localhost:5173) and the app should connect to the backend API endpoints.
+Open [http://localhost:5173](http://localhost:5173) in your browser. The frontend will connect automatically to the backend API.
+
+---
+
+## Production (Optional)
+
+- The project includes a **Dockerfile** for building the app.
+- Deploy with **Fly.io** or another Docker-supported platform.
+- Ensure environment variables are set via your platform’s secret management.
 
 ---
 
 ## Contributing
 
-Contributions are welcome. Suggested workflow:
-
-1. Create a feature branch from `main` as appropriate
-2. Open a pull request describing changes and expected behavior
-3. Keep changes small and focused (UI, behavior, or server enhancements)
-
-If you want, I can add a few starter tests and a basic GitHub Actions workflow for CI.
+- Create a feature branch from `main`
+- Open a pull request describing your changes
+- Keep changes small and focused: frontend, backend, or AI logic
 
 ---
 
 ## License
 
-This project is released under the MIT License. See the `LICENSE` file for details.
+MIT License — see `LICENSE` file.
 
 ---
 
 ## Contact
 
-Author: Lakshmipriya
+**Author:** Lakshmipriya
 
-If you want help customizing the UI, integrating a different model provider, or adding tests, tell me what to improve and I can implement it.
+## Discussion
+
+For questions, suggestions, or setup tips, please use the [GitHub Discussions](https://github.com/Lakshmipriya0812/ai-portfolio/discussions) section.
+````
