@@ -27,7 +27,7 @@ export const QUICK_ACTIONS = [
   {
     icon: "message-circle",
     label: "Contact",
-    question: "How can I get in touch with you?",
+    question: "How can I contact you?",
   },
 ] as const;
 
