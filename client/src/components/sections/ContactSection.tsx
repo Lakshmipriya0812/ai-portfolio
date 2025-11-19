@@ -1,5 +1,5 @@
-import React from 'react';
-import { FiMail, FiPhone, FiLinkedin, FiGithub } from 'react-icons/fi';
+import React from "react";
+import { FiMail, FiPhone, FiLinkedin, FiGithub } from "react-icons/fi";
 
 interface ContactItem {
   icon: React.ReactNode;
@@ -37,38 +37,38 @@ const ContactSection: React.FC<ContactSectionProps> = ({ structured }) => {
   const phone = meta.phone || structured?.phone;
   const linkedin = meta.linkedin || meta.LinkedIn || structured?.linkedin;
   const github = meta.github || meta.GitHub || structured?.github;
-  const title = structured?.title || 'Get in Touch';
+  const title = structured?.title || "Contact";
   const fallbackContent = structured?.content || structured?.text;
 
   const contacts: ContactItem[] = [
     email && {
       icon: <FiMail />,
-      label: 'Email',
+      label: "Email",
       value: email,
       link: `mailto:${email}`,
     },
     phone && {
       icon: <FiPhone />,
-      label: 'Phone',
+      label: "Phone",
       value: phone,
       link: `tel:${phone}`,
     },
     linkedin && {
       icon: <FiLinkedin />,
-      label: 'LinkedIn',
-      value: 'View Profile',
+      label: "LinkedIn",
+      value: "View Profile",
       link: linkedin,
     },
     github && {
       icon: <FiGithub />,
-      label: 'GitHub',
-      value: 'View Repos',
+      label: "GitHub",
+      value: "View Repos",
       link: github,
     },
   ].filter(Boolean) as ContactItem[];
 
   return (
-    <section className="max-w-3xl mx-auto p-8 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-2xl shadow-xl border border-gray-700">
+    <section className="max-w-3xl mx-auto p-8 bg-linear-to-r from-gray-900 via-gray-800 to-gray-900 rounded-2xl shadow-xl border border-gray-700">
       <h2 className="text-3xl font-semibold text-white mb-6">Get In Touch</h2>
       {contacts.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -86,7 +86,9 @@ const ContactSection: React.FC<ContactSectionProps> = ({ structured }) => {
               </span>
               <div>
                 <p className="text-sm text-gray-400">{item.label}</p>
-                <p className="text-base font-medium text-white break-all">{item.value}</p>
+                <p className="text-base font-medium text-white break-all">
+                  {item.value}
+                </p>
               </div>
             </a>
           ))}
